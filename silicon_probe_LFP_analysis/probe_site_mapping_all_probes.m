@@ -122,7 +122,9 @@ elseif strcmpi(probe_type, 'assy156')
 
 elseif strcmpi(probe_type, 'assy236')
 
-    % see Cambridge Neurotech Mini-Amp-64 User Guide
+    % see Cambridge Neurotech Mini-Amp-64 User Guide 
+    % this order assumes shank A is most lateral shank 
+    % verified 06/04/24 RL
     intan_amplifier_DL = [00, 08, 20, 03, 25, 04, 19, 26, ...
                           05,14,15,31,29,07,12,11, ...
                           10,24,16,02,22,01,09,17, ...
@@ -133,7 +135,7 @@ elseif strcmpi(probe_type, 'assy236')
                           41,54,37,42,59,55,51,39];
      intan_amplifier_DL=  intan_amplifier_DL + 1;
 
-     % verified order below
+     % verified order below 
      Cambridge236_order_DL = [64, 48, 16, 61, 13, 60, 29, 12, ...
                               59, 32, 42, 24, 09, 57, 44, 45, ...
                               47, 14, 31, 62, 15, 63, 46, 30, ...
