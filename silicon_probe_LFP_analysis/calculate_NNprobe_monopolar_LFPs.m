@@ -1,4 +1,12 @@
 function [lfp_data, actual_lfpFs] = calculate_NNprobe_monopolar_LFPs(intan_folder, target_Fs)
+%
+% INPUTS:
+%   intan_folder - 
+%
+% OUTPUTS:
+%   lfp_data
+%   actual_lfpFs - sampling rate actually achieved when trying to hit
+%       target_Fs (may be different due to rounding)
 
 raw_block_size = 100000;    % number of samples to handle at a time (titrate to memory), may want to make this a varargin
 bytes_per_sample = 2;
@@ -31,7 +39,7 @@ samples_per_channel = amp_file.bytes / (num_channels * bytes_per_sample);
 
 r = round(Fs / target_Fs);
 actual_lfpFs = Fs/r;
-raw_overlap_size = ceil(filtOrder * 2 / r) * r;
+raw_overlap_size = ceil(filtOrder * 2 / r) * r; % can use this line to check the overlap by making it equal to zero
 lfp_overlap_size = raw_overlap_size / r;
 
 lfp_block_size = raw_block_size / r;
@@ -43,7 +51,6 @@ net_lfp_samples_per_block = lfp_block_size - lfp_overlap_size;
 num_blocks = ceil(num_lfp_samples / net_lfp_samples_per_block);
 
 currentLFP = zeros(num_channels, lfp_block_size);
-% rawdata = zeros(num_channels, raw_block_size);
 
 % do the first block separate from the rest, since there will be some
 % overlap for the rest of the blocks
@@ -55,7 +62,6 @@ amplifier_data = readIntanAmplifierData_by_sample_number(amp_file.name,1,raw_blo
 for i_ch = 1 : num_channels
     currentLFP(i_ch, :) = ...
         decimate(amplifier_data(i_ch, :), r, filtOrder, 'fir');
-%     decimated_signal = decimate_zerophase(amplifier_data(i_ch, :), r, round(filtOrder/2));
 end
 lfp_data(:, LFPstart:LFPend) = currentLFP(:, 1:LFPend);
 clear currentLFP;
@@ -64,54 +70,49 @@ LFPstart = LFPend + 1;
 raw_block_plus_overlap_size = raw_block_size + raw_overlap_size;
 LFPblock_start = lfp_overlap_size + 1;
 LFPblock_end = (LFPblock_start + lfp_block_size - 1) - lfp_overlap_size;
+
+read_final_samples = false;
 for i_block = 2 : num_blocks
-    
+   
     disp(['Block ' num2str(i_block) ' of ' num2str(num_blocks)]);
-    
+   
 %     read_start_sample = (i_block-1) * raw_block_size - raw_overlap_size + 1;
     read_start_sample = (LFPstart-1) * r - raw_overlap_size;
     read_end_sample = read_start_sample + raw_block_plus_overlap_size - 1;
-    
+   
     new_amplifier_data = readIntanAmplifierData_by_sample_number(amp_file.name,read_start_sample,read_end_sample,amplifier_channels,convert_to_microvolts);
-    
+   
     if i_block < num_blocks
-        LFPend = (LFPstart + lfp_block_size - 1) - lfp_overlap_size;
+        if read_end_sample > samples_per_channel
+            % rarely, the end of the padded block goes past the end of the
+            % file, and messes up the indices
+            clear currentLFP
+            LFPend = size(lfp_data, 2);
+            read_final_samples = true;
+        else
+            LFPend = (LFPstart + lfp_block_size - 1) - lfp_overlap_size;
+        end
     else
         clear currentLFP;
+        read_final_samples = true;
         LFPend = size(lfp_data, 2);
     end
-    
+   
     for i_ch = 1 : num_channels
-        try
-            currentLFP(i_ch,:) = ...
-                decimate(new_amplifier_data(i_ch, :), r, filtOrder, 'fir');
-        catch
-            % this only fails if we get to the end of the file after the 
-            % samples to include in the LFP for this block, but before 
-            % we get to the end of the extra samples loaded to reduce edge
-            % effects. In this case, just copy what's available of the
-            % decimated signal into currentLFP and ignore the rest.
-            % Shouldn't be a problem because it won't read past
-            % LFPblock_end into the lfp_data array
-            a = decimate(new_amplifier_data(i_ch, :), r, filtOrder, 'fir');
-            currentLFP(i_ch,1:length(a)) = a;
-        end
-        % below was for testing that decimate performs zero-phase filter
-%         decimated_signal = decimate_zerophase(new_amplifier_data(i_ch, :), r, round(filtOrder/2));
-%         figure(1)
-%         hold off
-%         plot(currentLFP(i_ch, :))
-%         hold on
-%         plot(decimated_signal)
+        currentLFP(i_ch,:) = ...
+            decimate(new_amplifier_data(i_ch, :), r, filtOrder, 'fir');
     end
      
-    if i_block == num_blocks
+    if read_final_samples
         LFPblock_end = size(currentLFP, 2);
     end
     try
         lfp_data(:, LFPstart:LFPend) = currentLFP(:, LFPblock_start : LFPblock_end);
     catch
         keyboard
+    end
+    if read_final_samples
+        break
     end
     LFPstart = LFPend + 1;
 end

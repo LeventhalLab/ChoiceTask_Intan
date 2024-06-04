@@ -1,0 +1,217 @@
+% script to display sample LFPs from each session from each rat
+
+rats_to_analyze = [326, 327, 372, 374, 376, 378, 379, 394, 395, 396, 411, 412, 413, 419, 420, 425];
+
+sessions_to_skip = {'R0326_20191107a'};
+lfp_type = 'monopolar';
+ncols = 6;
+
+max_f = 50;
+power_range = [0, 5];
+
+rows_per_page = 8;
+ylims = [-1, 1] * 1000;
+
+% parent_directory = 'Z:\data\ChoiceTask\';
+intan_parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
+rat_xldbfile = 'ProbeSite_Mapping_MATLAB.xlsx';
+% summary_xls_dir = 'Z:\data\ChoiceTask\Probe Histology Summary';
+summary_xls_dir = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
+rat_xldbfile = fullfile(summary_xls_dir, rat_xldbfile);
+
+% change the line below to allow looping through multiple trial types,
+% extract left vs right, etc.
+trials_to_analyze = 'correct';
+lfp_types = {'monopolar', 'bipolar'};
+lfp_type = 'monopolar';
+% trials_to_analyze = 'all';
+
+t_window = [-2.5, 2.5];
+event_list = {'cueOn', 'centerIn', 'tone', 'centerOut' 'sideIn', 'sideOut', 'foodClick', 'foodRetrieval'};
+
+probe_type_sheet = 'probe_type';
+probe_types = read_Jen_xls_summary(rat_xldbfile, probe_type_sheet);
+% NOTE - UPDATE FUNCTION read_Jen_xls_summary WHEN WE NEED OTHER
+% INFORMATION OUT OF THAT SPREADSHEET
+
+[ratIDs, ratIDs_goodhisto] = get_rat_list(rats_to_analyze);
+
+num_rats = length(ratIDs);
+
+for i_rat = 2 : num_rats
+    ratID = ratIDs{i_rat};
+    rat_folder = fullfile(intan_parent_directory, ratID);
+
+    if ~isfolder(rat_folder)
+        continue;
+    end
+
+    probe_type = probe_types{probe_types.ratID == ratID, 2};
+    probe_site_mapping = probe_site_mapping_all_probes(probe_type);
+
+    processed_folder = find_data_folder(ratID, 'processed', intan_parent_directory);
+    session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));
+    num_sessions = length(session_dirs);
+
+%     if i_rat == 1
+%         start_session = 1;
+%     else
+%         start_session = 1;
+%     end
+    start_session = 1;
+    for i_session = start_session : num_sessions
+        
+        session_name = session_dirs(i_session).name;
+
+        if contains(sessions_to_skip, session_name)
+            sprintf('skipping %s', session_name)
+            continue
+        end
+        cur_dir = fullfile(session_dirs(i_session).folder, session_name);
+
+        pd_metadata = parse_processed_folder(cur_dir);
+        cd(cur_dir)
+
+%         % load trials structure
+%         trials_name = sprintf('%s_trials.mat', session_name);
+%         trials_name = fullfile(cur_dir, trials_name);
+% 
+%         if ~exist(trials_name)
+%             sprintf('no trials structure found for %s', session_name)
+%             continue
+%         end
+% 
+%         load(trials_name)
+        
+%         selected_trials = extract_trials_by_features(trials, trials_to_analyze);
+%         if isempty(selected_trials)
+%             sprintf('no %s trials found for %s', trials_to_analyze, session_name)
+%             continue
+%         end
+
+        lfp_fname = strcat(session_name, sprintf('_%s_lfp.mat', lfp_type));
+        if ~isfile(lfp_fname)
+            sprintf('%s not found, skipping', lfp_fname)
+            continue
+        end
+
+        lfp_data = load(lfp_fname);
+        if ~lfp_data.convert_to_microvolts
+            lfp_data.lfp = lfp_data.lfp * 0.195;   % assumes data collected by Intan system
+            lfp_data.convert_to_microvolts = true;
+        end
+
+        if strcmpi(lfp_type, 'monopolar')
+            % re-order sites to match probe geometry
+            sorted_lfps = lfp_data.lfp(probe_site_mapping, :);
+        else
+            sorted_lfps = lfp_data.lfp;
+        end
+
+        num_channels = size(lfp_data.lfp, 1);
+        num_samples = size(lfp_data.lfp, 2);
+%         ordered_lfp = lfp_data.lfp(probe_site_mapping, :);
+
+        Fs = lfp_data.actual_Fs;
+        t = linspace(1/Fs, num_samples/Fs, num_samples);
+
+        total_pages = ceil(num_channels / rows_per_page);
+        
+        [h_fig, h_axes, tlayout] = LFP_layout_tiles(rows_per_page, ncols, '');
+        num_pages = 0;
+        
+        session_pgf = create_processedgraphs_folder(pd_metadata, intan_parent_directory);
+
+        tic
+        valid_ranges = detect_LFP_artifacts(lfp_data, probe_type);
+        toc
+        for i_lfp = 1 : num_channels
+            
+            plot_row = mod(i_lfp, rows_per_page);
+            if plot_row == 0
+                plot_row = rows_per_page;
+            end
+            if strcmpi(lfp_type, 'monopolar')
+                if plot_row == 1
+                    channels_string = sprintf('%02d', probe_site_mapping(i_lfp));
+                else
+                    channels_string = sprintf('%s, %02d', channels_string, probe_site_mapping(i_lfp));
+                end
+            end
+
+            axes(h_axes(plot_row, 1))
+
+%             plot(t, lfp_data.lfp(i_lfp, :));
+            plot(t, sorted_lfps(i_lfp, :));
+            % overlay valid range markers
+            hold on
+            for i_range = 1 : size(valid_ranges, 1)
+                plot(t(valid_ranges(i_range,1)) : valid_ranges(i_range, 2), ylims(2)-50, 'r')
+            end
+
+%             plot(t, ordered_lfp(i_lfp, :));
+            set(gca,'xlim',[0, max(t)],'ylim', ylims)
+            if plot_row < rows_per_page
+                xticklabels([])
+            end
+
+%             [p, f] = pspectrum(lfp_data.lfp(i_lfp, :), lfp_data.actual_Fs);
+            [p, f] = pspectrum(sorted_lfps(i_lfp, :), lfp_data.actual_Fs);
+            [valid_p, ~] = psd_without_artifacts(sorted_lfps(i_lfp, :), lfp_data.actual_Fs, valid_ranges);
+
+            axes(h_axes(plot_row, 2));
+            plot(f(f<max_f), log10(p(f<max_f)));
+            set(gca,'xlim',[0, max_f],'ylim',power_range);
+            if plot_row < rows_per_page
+                xticklabels([])
+            end
+            if plot_row == 1
+                title('log10 power')
+            end
+
+            axes(h_axes(plot_row, 3));
+            plot(f(f<max_f), log10(valid_p(f<max_f)));
+            set(gca,'xlim',[0, max_f],'ylim',power_range);
+            if plot_row < rows_per_page
+                xticklabels([])
+            end
+            if plot_row == 1
+                title('log10 power valid intervals')
+            end
+
+            if plot_row == rows_per_page
+                % save this image; append 
+                num_pages = num_pages + 1;
+
+                axes(h_axes(plot_row, 1))
+                xlabel('time (s)')
+
+                axes(h_axes(plot_row, 2))
+                xlabel('frequency (Hz)')
+
+                title_string = sprintf('%s; ch %s; page %d of %d', session_name, channels_string, num_pages, total_pages);
+                title(tlayout, title_string, 'interpreter', 'none')
+
+                save_name = sprintf('%s_%sLFPplots_p%02d', session_name, lfp_type, num_pages);
+                save_name = fullfile(session_pgf, save_name);
+                save_name_pdf = sprintf('%s_%sLFPplots_p%02d.pdf', session_name, lfp_type, num_pages);
+                save_name_pdf = fullfile(session_pgf, save_name_pdf);
+%                 if num_pages == 1
+                    % save fig as pdf
+                    print(save_name_pdf, '-bestfit', '-dpdf')
+%                 else
+%                     % append to file
+%                     print(save_name_pdf, '-append', '-bestfit', '-dpdf')
+%                 end
+                savefig(h_fig, save_name);
+                close(h_fig)
+                if num_pages < total_pages
+                    [h_fig, h_axes, tlayout] = LFP_layout_tiles(rows_per_page, ncols, '');
+                end
+            end
+
+        end
+
+    end
+
+end

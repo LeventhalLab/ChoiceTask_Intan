@@ -29,7 +29,6 @@ function trials = createTrialsStruct_simpleChoice_Intan( logData, nexData )
 %           .movementDirection
 %           .sideNP
 %           .timing
-%               .
 %           .logConflict.isConflict
 
 %    outcome - 0 = successful
@@ -37,12 +36,14 @@ function trials = createTrialsStruct_simpleChoice_Intan( logData, nexData )
 %              2 = false start, failed to hold for PSSHT (for
 %                  stop-signal/go-nogo; not relevant for simple choice task)
 %              3 = rat started in the wrong port
-%              4 = rat exceeded the limited hold
+%              4 = rat exceeded the limited hold (LimitedHold Violation -
+%              JM 06182020)
 %              5 = rat went the wrong way after the tone
 %              6 = rat failed to go back into a side port in time
+%              (MovementHold violation - JM 06182020)
 %              7 = Outcome wasn't recorded in the data file
 
-timingTolerance = 1e-4;
+timingTolerance = 10e-3;
 trials_to_search_for_startMark = 10;
 %**************************************************************************
 % some preliminaries to set up the trials structure
@@ -94,7 +95,7 @@ GO_startIdx = strfind(round((GO_markEnd_ts-GO_markStart_ts)/.005),[1 2 3 4]);
 %why are there two Idxs? is this legacy for some system that had these
 %times on different rows or something?
 if isempty(GO_startIdx)
-    error('Could not find trial start sequence.');
+    error('lognexmerge:lognexmismatch', 'Could not find trial start sequence.');
 else
     GO_endIdx = GO_startIdx;
 end
@@ -146,11 +147,14 @@ for iTrial = 1 : numTrials
         trialInterval(2) = GO_markStart_ts(GO_startIdx + iTrial);
     end
     logTrial = getSingleLogTrial(logData, logTrialIdx);
-%     logTrial.responseDurationLimit = logTrial.responseDurationLimit / 1000;   % take this out after debugging
+ %   logTrial.responseDurationLimit = logTrial.responseDurationLimit / 1000;   % take this out after debugging
+   
     trials(iTrial) = extractSingleTrial(events, ...
                                         logTrial, ...
                                         trialInterval, ...
-                                        timingTolerance);
+                                        timingTolerance, ...
+                                        logData.MovementHold, ...
+                                        logData.LimitedHold);
     
 end
 
@@ -183,7 +187,8 @@ logTrial.maxInterTrial = logData.maxInterTrial;
 logTrial.minPreTone = logData.minPreTone;
 logTrial.maxPreTone = logData.maxPreTone;
 logTrial.taskLevel = logData.taskLevel;
-% logTrial.responseDurationLimit = logData.responseDurationLimit;
+% logTrial.responseDurationLimit = logData.responseDurationLimit; % take
+% this out when done debugging % responseDurationLimit = legacy JM 06112020
 logTrial.Time = logData.Time(logTrialIdx);
 logTrial.Attempt = logData.Attempt(logTrialIdx);
 logTrial.Center = log2(logData.Center(logTrialIdx)) + 1;    % convert 2^n notation to 1-5 notation
@@ -235,7 +240,7 @@ end    % function eventIdx = getEventIdx( events, eventName )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function trialData = extractSingleTrial(events, logTrial, trialInterval, timingTolerance)
+function trialData = extractSingleTrial(events, logTrial, trialInterval, timingTolerance, MovementHold, LimitedHold)
 %
 % usage:
 %
@@ -379,24 +384,40 @@ if isempty(NoseInTS)
 end
 
 if ~nose_out_event    % there was no nose-in event or nose-out event; this must have been the last trial and it wasn't completed
-    return;
+    return; % This doesn't account for a missing timestamp (e.g. at the end of a trial if MaxTime is reach before sideIn occurs) JM 06112020
 end
 
-if ~isempty(trialEvents{Tone1idx}.timestamps)
+if ~isempty(trialEvents{Tone1idx}.timestamps)   % records timestamps of Tone if tone is not empty
     tone_ts = trialEvents{Tone1idx}.timestamps(1);
 elseif ~isempty(trialEvents{Tone2idx}.timestamps)
     tone_ts = trialEvents{Tone2idx}.timestamps(1);
 else
-    tone_ts = [];
+    tone_ts = []; 
 end
 
 if NoseInTS(1) > tone_ts    % the first nose-in can only occur after the tone if the rat started in the correct center port before the cue was lit
     NoseInTS = [CueTS(1), NoseInTS];
     NoseInID = [CueID(1), NoseInID];
 end
-    
+
+% block of code to figure out if this was a correct trial, or not, and set
+% a flag to True if it was correct
+trialCorrectFlag = false;
 if ~isempty(trialEvents{FHidx}.timestamps) && (~isempty(trialEvents{Tone1idx}.timestamps) || ~isempty(trialEvents{Tone2idx}.timestamps))
+    trialCorrectFlag = true;
     % this was a correct trial because the food hopper was activated
+    % probably.
+    % BUT- sometimes the food hopper fires at the end of a
+    % session and there is no next trial. Need to figure out how to deal
+    % with that possibility.
+    if trialEvents{FHidx}.timestamps(1) > logTrial.maxTime
+        % the food hopper fired after the session was over, so if this
+        % trial was actually completed, it was a wrong trial (I think)
+        trialCorrectFlag = false;
+    end
+end
+
+if trialCorrectFlag
     trialData.countsAsTrial = 1;
     trialData.valid = 1;
     trialData.movementTooLong = 0;
@@ -427,12 +448,32 @@ if ~isempty(trialEvents{FHidx}.timestamps) && (~isempty(trialEvents{Tone1idx}.ti
                                                      % trials)
         trialData.movementDirection = 2;             % moved right
         sideInAfterCue = trialEvents{NoseInidx(CueID(1) + 1)}.timestamps(trialEvents{NoseInidx(CueID(1) + 1)}.timestamps > CueTS(1));
-        trialData.timestamps.sideIn = sideInAfterCue(1);
-        trialData.timestamps.sideOut = ...
-            events{NoseOutidx(CueID(1) + 1)}.timestamps(events{NoseOutidx(CueID(1) + 1)}.timestamps > NoseInTS(1));
-        trialData.timestamps.sideOut = trialData.timestamps.sideOut(1);
-        % done this way to prevent the algorithm from counting a nose-out
-        % event that may be left over from a previous trial
+        if isempty(sideInAfterCue)
+            % this trial was probably at the very end of a session, and the
+            % session ended mid-trial before the rat could poke the side
+            % port. Not sure how this got counted as correct - maybe
+            % recorded that way in the .log file but the sideIn wasn't
+            % registered on the Intan system. -DL 12/19/2022
+            % label as an invalid trial, doesn't count as a trial, make
+            % sure listed as not correct so not incorporated in analysis
+            trialData.countsAsTrial = 0;
+            trialData.valid = 0;
+            trialData.correct = 0;
+        else
+            trialData.timestamps.sideIn = sideInAfterCue(1); % Patched for sideIn timestamp empty JM 20200612
+            trialData.timestamps.sideOut = ...
+                events{NoseOutidx(CueID(1) - 1)}.timestamps(events{NoseOutidx(CueID(1) - 1)}.timestamps > NoseInTS(1));
+            trialData.timestamps.sideOut = trialData.timestamps.sideOut(1);
+            trialData.timestamps.foodClick = trialEvents{FHidx}.timestamps;
+
+            trialData.timing.MT = trialData.timestamps.sideIn - ...  % Patched for sideIn timestamp empty JM 20200612 R0326_20200226 trial 162 example
+            trialData.timestamps.centerOut;
+            trialData.timing.foodDelay = trialData.timestamps.foodClick - ...
+                trialData.timestamps.sideIn;                         % Patched for sideIn timestamp empty JM 20200612 R0326_20200226 trial 162 example
+            trialData.timing.sidePortHold = trialData.timestamps.sideOut - ...
+                trialData.timestamps.sideIn;
+        end
+
     else
         % tone 1 (low tone) was played
         trialData.tone = 1;
@@ -440,34 +481,48 @@ if ~isempty(trialEvents{FHidx}.timestamps) && (~isempty(trialEvents{Tone1idx}.ti
         trialData.sideNP = trialData.centerNP - 1;
         trialData.movementDirection = 1;
         sideInAfterCue = trialEvents{NoseInidx(CueID(1) - 1)}.timestamps(trialEvents{NoseInidx(CueID(1) - 1)}.timestamps > CueTS(1));
-        trialData.timestamps.sideIn = sideInAfterCue(1);
-        trialData.timestamps.sideOut = ...
-            events{NoseOutidx(CueID(1) - 1)}.timestamps(events{NoseOutidx(CueID(1) - 1)}.timestamps > NoseInTS(1));
-        trialData.timestamps.sideOut = trialData.timestamps.sideOut(1);
+        if isempty(sideInAfterCue)
+            % this trial was probably at the very end of a session, and the
+            % session ended mid-trial before the rat could poke the side
+            % port. Not sure how this got counted as correct - maybe
+            % recorded that way in the .log file but the sideIn wasn't
+            % registered on the Intan system. -DL 12/19/2022
+            % label as an invalid trial, doesn't count as a trial, make
+            % sure listed as not correct so not incorporated in analysis
+            trialData.countsAsTrial = 0;
+            trialData.valid = 0;
+            trialData.correct = 0;
+        else
+            trialData.timestamps.sideIn = sideInAfterCue(1); % Patched for sideIn timestamp empty JM 20200612
+            trialData.timestamps.sideOut = ...
+                events{NoseOutidx(CueID(1) - 1)}.timestamps(events{NoseOutidx(CueID(1) - 1)}.timestamps > NoseInTS(1));
+            trialData.timestamps.sideOut = trialData.timestamps.sideOut(1);
+            trialData.timestamps.foodClick = trialEvents{FHidx}.timestamps;
+
+            trialData.timing.MT = trialData.timestamps.sideIn - ...  % Patched for sideIn timestamp empty JM 20200612 R0326_20200226 trial 162 example
+            trialData.timestamps.centerOut;
+            trialData.timing.foodDelay = trialData.timestamps.foodClick - ...
+                trialData.timestamps.sideIn;                         % Patched for sideIn timestamp empty JM 20200612 R0326_20200226 trial 162 example
+            trialData.timing.sidePortHold = trialData.timestamps.sideOut - ...
+                trialData.timestamps.sideIn;
+        end
+
         % done this way to prevent the algorithm from counting a nose-out
         % event that may be left over from a previous trial
     end    % end if isempty(trialEvents{Tone1idx}.timestamps)
-    
-    trialData.timestamps.foodClick = trialEvents{FHidx}.timestamps;
-    
+
     % calculate timing of events within the trial
     trialData.timing.pretone = trialData.timestamps.tone - ...
         trialData.timestamps.centerIn;
     trialData.timing.RT = trialData.timestamps.centerOut - ...
         trialData.timestamps.tone;
-    trialData.timing.MT = trialData.timestamps.sideIn - ...
-        trialData.timestamps.centerOut;
-    trialData.timing.foodDelay = trialData.timestamps.foodClick - ...
-        trialData.timestamps.sideIn;
-    trialData.timing.sidePortHold = trialData.timestamps.sideOut - ...
-        trialData.timestamps.sideIn;
-    
+
     % extract the FIRST time the rat went into the reward port. This is a
     % bit tricky because this may occur AFTER the next trial started
     % depending on how the behavior software was running and if the food
     % port sensor was working at all
     
-    if FoodSensidx ~= 0         % the food port sensor was working
+    if FoodSensidx ~= 0 && ~isempty(sideInAfterCue)       % the food port sensor was working and there was a valid sideInAfterCue event
         firstFoodRetrieval = find(events{FoodSensidx}.timestamps > ...
             trialData.timestamps.sideIn);
         if ~isempty(firstFoodRetrieval)
@@ -483,12 +538,18 @@ if ~isempty(trialEvents{FHidx}.timestamps) && (~isempty(trialEvents{Tone1idx}.ti
         trialData.timestamps.foodRetrieval = 0;   % presumably, port sensor was broken for this session
         trialData.timing.foodRetrieval = 0;
     end    % FoodSensidx ~= 0  
-    
+   
     % check that outcome was correct, RT, MT, pre-tone intervalS, center
     % and target ports match up
     boxLogConflicts.outcome = ~(logTrial.outcome == 0);
     boxLogConflicts.RT = ~(abs(logTrial.RT - trialData.timing.RT) < timingTolerance);
-    boxLogConflicts.MT = ~(abs(logTrial.MT - trialData.timing.MT) < timingTolerance);
+    if ~isempty(sideInAfterCue)
+        % no MT is there was no sideIn, which could happen on a "correct"
+        % trial according to the behavior log if this was the very last
+        % trial so the sideIn was not registered on the Intan system
+        % -DL 12/19/2022
+        boxLogConflicts.MT = ~(abs(logTrial.MT - trialData.timing.MT) < timingTolerance);
+    end
     boxLogConflicts.pretone = ~(abs(logTrial.pretone - trialData.timing.pretone) < timingTolerance);
     boxLogConflicts.centerNP = ~(logTrial.Center == trialData.centerNP);
     boxLogConflicts.sideNP = ~(logTrial.Target == trialData.sideNP);
@@ -515,7 +576,7 @@ else
   %  trialData.timestamps.wrong = trialEvents{HLidx}.timestamps;
 
 
-    % patch 3/29/2010. First, check to see if the rat started with its nose
+    % First, check to see if the rat started with its nose
     % in a port at the start of the trial. If so, counts as a false start
     % instead of a "wrong start"
     if ~isempty(NoseOutTS)
@@ -556,7 +617,8 @@ else
 
         end
     end
-
+    
+            
     % check to see if the rat poked the wrong center port
     if trialData.centerNP ~= NoseInID(1)
         % wrong start trial
@@ -569,7 +631,13 @@ else
         % a bit of caution extracting the centerOut time, as this may
         % actually occur after the next trial has started
         noseOut = events{NoseOutidx(NoseInID(1))}.timestamps - trialInterval(1);
-        trialData.timestamps.centerOut = min(noseOut(noseOut > 0));
+        trialData.timestamps.centerOut = min(events{NoseOutidx(NoseInID(1))}.timestamps(noseOut > 0));
+%         trialData.timestamps.centerOut = min(noseOut(noseOut > 0));     % old version that indexes the wrong variable. 
+        % noseOut is the timestamps for all noseOut events at the port that the rat started in MINUS the trial start time
+        % instead, use noseOut to find the first noseOut event in this port
+        % after the rat poked its nose in, then extract the timestamp at
+        % that index from events{NoseOutidx(NoseInID(1))}.timestamps
+
         % I don't know what this is, it throws an error -Matt 20160110
 %         trialData.timing.wrongAnswerDelay = trialEvents{HLidx}.timestamps(1) - ...
 %             trialData.timestamps.centerIn;
@@ -638,32 +706,32 @@ else
     trialData.timing.reactionTime = ...
         trialData.timestamps.centerOut - trialData.timestamps.tone;
 
-%     if trialData.timing.reactionTime > logTrial.responseDurationLimit
-%         % nose-out occurred after limited hold expired.
-%         trialData.countsAsTrial = 1;
-%         trialData.valid = 1;
-%         trialData.invalidNP = 0;
-%         trialData.holdTooLong = 1;
-%         trialData.movementTooLong = 0;
-%         trialData.falseStart = 0;
+     if trialData.timing.reactionTime > LimitedHold
+%        % nose-out occurred after limited hold expired.
+        trialData.countsAsTrial = 1;
+        trialData.valid = 1;
+        trialData.invalidNP = 0;
+        trialData.holdTooLong = 1;
+        trialData.movementTooLong = 0;
+        trialData.falseStart = 0;
 % 
 %         trialData.timing.wrongAnswerDelay = ...
 %             trialEvents{HLidx}.timestamps - ...
 %             (trialData.timestamps.tone + logTrial.responseDurationLimit);
-% 
-%         % check that outcome, center port, and pre-tone interval match with .log file
-%         boxLogConflicts.outcome = ~(logTrial.outcome == 4);
-%         boxLogConflicts.centerNP = ~(logTrial.Center == trialData.centerNP);
-%         boxLogConflicts.pretone = ~(abs(logTrial.pretone - trialData.timing.pretone) < timingTolerance);
-% 
-%         trialData.logConflict.isConflict = boxLogConflicts.outcome | ...
-%                                            boxLogConflicts.centerNP | ...
-%                                            boxLogConflicts.pretone;
-%         trialData.logConflict.boxLogConflicts = boxLogConflicts;
-%         return;
-% 
-%     end    % end if trialData.timing.reactionTime > logTrial.responseDurationLimit
+%           %responseDurationLimit is a legacy JM 20200601 
+%
+%         check that outcome, center port, and pre-tone interval match with .log file
+        boxLogConflicts.outcome = ~(logTrial.outcome == 4);
+        boxLogConflicts.centerNP = ~(logTrial.Center == trialData.centerNP);
+        boxLogConflicts.pretone = ~(abs(logTrial.pretone - trialData.timing.pretone) < timingTolerance);
 
+        trialData.logConflict.isConflict = boxLogConflicts.outcome | ...
+                                           boxLogConflicts.centerNP | ...
+                                           boxLogConflicts.pretone;
+        trialData.logConflict.boxLogConflicts = boxLogConflicts;
+        return;
+
+    end    % end if trialData.timing.reactionTime > LimitedHold
 
 
 % not a limited hold violation - did the rat poke a side port in time?
@@ -689,6 +757,7 @@ else
 %         trialData.timing.wrongAnswerDelay = ...
 %             trialEvents{HLidx}.timestamps - ...
 %             (trialData.timestamps.tone + logTrial.responseDurationLimit);
+%             %responseDurationLimit is a legacy JM 20200601
 
         % check that outcome was movement hold violation, RT, pre-tone interval,
         % center ports match up
@@ -707,7 +776,12 @@ else
 
     end    % end if max(size(NoseInTS...
     
-    % this must have been a wrong port trial
+    % this could be a movement hold violation still if RT + MT > limited
+    % hold. Limited hold is usually 1 second (for Choice Advanced), but need to figure out how to
+    % get the limited hold into this function for testing. The other
+    % possiblity is that this was a wrong port trial. -DL 20200420
+    % MovementHold in trialStruct (line 150) and used patch JM 20200422
+    
     trialData.countsAsTrial = 1;
     trialData.valid = 1;
     trialData.invalidNP = 0;
@@ -743,24 +817,42 @@ else
     trialData.timing.wrongAnswerDelay = trialEvents{HLidx}.timestamps - ...
         trialData.timestamps.sideIn;
     
+    if trialData.timing.reactionTime + trialData.timing.movementTime > MovementHold      % change the "1" to limited hold DL; edit LimitedHold to MovementHold JM 06232020
+        % this was a movement hold violation
+        % check that logTrial was a movement hold violation
+        % ignore the fact that MT won't match up (will be recorded as zero
+        % in the logTrial structure)
+        boxLogConflicts.outcome = ~(logTrial.outcome == 6);
+        boxLogConflicts.RT = ~(abs(logTrial.RT - trialData.timing.reactionTime) < timingTolerance);
+        boxLogConflicts.pretone = ~(abs(logTrial.pretone - trialData.timing.pretone) < timingTolerance);
+        boxLogConflicts.centerNP = ~(logTrial.Center == trialData.centerNP);
+        
+        trialData.logConflict.isConflict = boxLogConflicts.outcome | ...
+                                       boxLogConflicts.RT | ...
+                                       boxLogConflicts.pretone | ...
+                                       boxLogConflicts.centerNP;
+                                   
+        trialData.logConflict.boxLogConflicts = boxLogConflicts;
+        
+        return
+    end
     % check that outcome was wrong target, RT, MT, pre-tone intervalS, center
     % and target ports match up (that is, are off by 2)
     boxLogConflicts.outcome = ~(logTrial.outcome == 5);
-    boxLogConlicts.RT = ~(abs(logTrial.RT - trialData.timing.reactionTime) < timingTolerance);
+    boxLogConflicts.RT = ~(abs(logTrial.RT - trialData.timing.reactionTime) < timingTolerance);
     boxLogConflicts.MT = ~(abs(logTrial.MT - trialData.timing.movementTime) < timingTolerance);
     boxLogConflicts.pretone = ~(abs(logTrial.pretone - trialData.timing.pretone) < timingTolerance);
     boxLogConflicts.centerNP = ~(logTrial.Center == trialData.centerNP);
     boxLogConflicts.sideNP = ~(logTrial.SideNP == trialData.sideNP);
     
     trialData.logConflict.isConflict = boxLogConflicts.outcome | ...
-                                       boxLogConlicts.RT | ...
+                                       boxLogConflicts.RT | ...
                                        boxLogConflicts.MT | ...
                                        boxLogConflicts.pretone | ...
                                        boxLogConflicts.centerNP | ...
                                        boxLogConflicts.sideNP;
-    trialData.logConflict.boxLogConflicts = boxLogConflicts; 
-
-
+    trialData.logConflict.boxLogConflicts = boxLogConflicts;     
+    
 end   % end if ~isempty(trialEvents{FHidx}.timestamps)
 
 end

@@ -28,6 +28,10 @@ tic
 digital_word = readIntanDigitalFile(dig_in_file);
 toc
 tic
+if ~isfield(intan_info, 'board_adc_channels')
+    nexData = [];
+    return
+end
 ADC_signals = readIntanAnalogFile(analog_in_file,intan_info.board_adc_channels);
 toc
 

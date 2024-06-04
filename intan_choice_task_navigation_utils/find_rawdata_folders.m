@@ -1,4 +1,11 @@
 function valid_rat_folder = find_rawdata_folders(intan_choicetask_parent)
+%
+% INPUTS:
+%   intan_choicetask_parent - parent directory for all intan choice task
+%       recordings
+%
+% OUTPUTS:
+%
 
 potential_rat_folders = dir(intan_choicetask_parent);
 valid_rat_folder = struct('name',[], 'intan_folders', []);
@@ -43,27 +50,28 @@ for i_ratfolder = 1 : num_valid_rat_folders
             % test if session folder contains intan data
             full_rd_path = fullfile(cur_rawdata_folder, potential_session_folders(i_sessionfolder).name);
             test_folders = dir(full_rd_path);
-            for i_tf = 1 : length(test_folders)
-                fp = fullfile(full_rd_path, test_folders(i_tf).name);
-                
-                if ~isfolder(fp) || length(test_folders(i_tf).name) < 5
-                    continue
-                end
-                
-                if ~isvalidratfolder(test_folders(i_tf).name(1:5))
-                    continue
-                end
+            intan_datafolder = is_intan_datafolder(full_rd_path);
+%             for i_tf = 1 : length(test_folders)
+%                 fp = fullfile(full_rd_path, test_folders(i_tf).name);
+%                 
+%                 if ~isfolder(fp) || length(test_folders(i_tf).name) < 5
+%                     continue
+%                 end
+%                 
+%                 if ~isvalidratfolder(test_folders(i_tf).name(1:5))
+%                     continue
+%                 end
                 
 %                 if isbehavior_vi_folder(test_folders(i_tf).name)
 %                     continue
 %                 end
             
-                intan_datafolder = is_intan_datafolder(full_rd_path);
+%                 intan_datafolder = is_intan_datafolder(full_rd_path);
                 if ~isempty(intan_datafolder)
                     num_intan_sessionfolders = num_intan_sessionfolders + 1;
                     intan_datafolders{num_intan_sessionfolders} = intan_datafolder;
                     found_intan_data = true;
-                end
+%                 end
             end
         end
     end
@@ -72,8 +80,11 @@ for i_ratfolder = 1 : num_valid_rat_folders
         num_rat_folders_with_intan_data = num_rat_folders_with_intan_data + 1;
         valid_rat_folder(num_rat_folders_with_intan_data).name = rat_folders{i_ratfolder};
         valid_rat_folder(num_rat_folders_with_intan_data).intan_folders = intan_datafolders;
+        valid_rat_folder(num_rat_folders_with_intan_data).ratID = cur_ratID;
     end
     
 end
 
 end
+
+% T = readtable('ProbeSite_Mapping_MATLAB.xlsx', 'sheet', 2);

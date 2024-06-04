@@ -1,15 +1,21 @@
-function probe_anatomy_info = read_probe_mapping_xls(fname, sheetname)
+function probe_anatomy_info = read_probe_mapping_xls(fname)
 
-% important that the variable names are stored in range A1-G1
-opts = detectImportOptions(fname, 'filetype', 'spreadsheet', 'variablenamesrange', 'A1:G1', 'sheet', sheetname);
-probe_anatomy_info = readtable(fname, 'Sheet', sheetname);
+% get the sheet names for this file
 
-% as of 4/27/2022, variable names are:
-% AmplifierChannel - recording channel number in the amplifier.dat file
-%   (the "intan channel number")
-% NN_Shank_Number - shank number for this site on an 8 x 8 neuronexus probe
-% NN_SiteNumber - site number as defined on neuronexus probe
-% AP - anterior-posterior site location
-% ML - medial-lateral site location
-% DV - dorsal-ventral site location
-% Region - presumed brain region
+sheets = sheetnames(fname);
+num_sheets = size(sheets, 1);
+
+num_rat_sheets = 0;
+for i_sheet = 1 : num_sheets
+    
+    cur_sheet = char(sheets(i_sheet));
+    if cur_sheet(1) == 'R'
+        num_rat_sheets = num_rat_sheets + 1;
+        rat_sheets{num_rat_sheets} = cur_sheet;
+    end 
+    
+end
+
+%T = readtable(fname, rat_sheets{1});
+T = readtable(fname,'Sheet', rat_sheets{1});
+probe_anatomy_info = 0;
