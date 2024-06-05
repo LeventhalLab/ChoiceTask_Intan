@@ -35,6 +35,8 @@ for i_rat = 1 : length(rats_with_intan_sessions)
     
     intan_folders = rats_with_intan_sessions(i_rat).intan_folders;
     ratID = rats_with_intan_sessions(i_rat).ratID;
+
+    fprintf('calculating for %s\n', ratID)
     
     for i_sessionfolder = 1 : length(intan_folders)
         [session_folder, ~, ~] = fileparts(intan_folders{i_sessionfolder});
@@ -57,7 +59,7 @@ for i_rat = 1 : length(rats_with_intan_sessions)
         
             [lfp, actual_Fs] = calculate_monopolar_LFPs(intan_folders{i_sessionfolder}, target_Fs, convert_to_microvolts); % This file does not need to be probe_type specific
             
-            save(full_lfp_name, 'lfp', 'actual_Fs');
+            save(full_lfp_name, 'lfp', 'actual_Fs', '-v7.3');
 
             monopolar_lfp_calculated = true;
 
@@ -73,13 +75,19 @@ for i_rat = 1 : length(rats_with_intan_sessions)
                 load(full_lfp_name);
             end
 
-            textstr = sprintf('calculating monopolar LFP for %s', rd_metadata.session_name);
+            textstr = sprintf('calculating bipolar LFP for %s', rd_metadata.session_name);
             disp(textstr)
             
             probe_type = probe_types{probe_types.ratID == ratID, 2};
             [bipolar_lfp, intan2probe_mapping] = calculate_bipolar_LFPs(lfp, probe_type);
+            if isempty(bipolar_lfp)
+                % there was something wrong with the bipolar lfp
+                % calculation
+                fprintf('error in calculating bipolar LFPs for %s\n', rd_metadata.session_name)
+                continue
+            end
 
-            save(bp_lfpname, 'bipolar_lfp', 'actual_Fs', 'probe_type', 'intan2probe_mapping', 'full_lfp_name');
+            save(bp_lfpname, 'bipolar_lfp', 'actual_Fs', 'probe_type', 'intan2probe_mapping', 'full_lfp_name', '-v7.3');
 
         end
         

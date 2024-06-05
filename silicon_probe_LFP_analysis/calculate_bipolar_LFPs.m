@@ -9,7 +9,8 @@ function [bipolar_LFPs, probe_site_mapping] = calculate_bipolar_LFPs(lfp, probe_
 %       "assy236" - cambrdige neurotech
 %
 % OUTPUTS:
-%
+%   bipolar_LFPs
+%   probe_site_mapping - 
 
 
 % re-arrange the rows to reflect the order of LFPs
@@ -20,6 +21,14 @@ probe_site_mapping = probe_site_mapping_all_probes(probe_type);
 
 % first, rearrange field potentials so they are sorted from dorsal to
 % ventral
+
+if size(lfp, 1) ~= length(probe_site_mapping)
+    % something is wrong with the data - there is a session where there are
+    % only 63 data files instead of 64
+    bipolar_LFPs = [];
+    probe_site_mapping = [];
+    return 
+end
 
 sorted_lfps = lfp(probe_site_mapping, :);
 num_lfps = size(lfp, 1);   % assume each row is a recording channel
