@@ -28,7 +28,7 @@ function [ordered_lfp, intan_site_order, intan_site_order_for_trials_struct, sit
 % lfp_data = load('R0326_20200228a_lfp.mat'); % Use this catch for confirming
 % data in single files.
 
-if strcmpi(probe_type, 'nn8x8')
+if strcmpi(probe_type, 'NN8x8')
     if isstring(lfp_data)
         if exist(lfp_data, 'file')
             lfp = load(lfp_data);
