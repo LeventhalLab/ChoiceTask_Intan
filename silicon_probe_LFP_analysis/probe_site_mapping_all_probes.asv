@@ -109,18 +109,18 @@ elseif strcmpi(probe_type, 'assy156')
                               63, 10, 59, 55, 05, 09, 60, 64];
     % RL 06/07/24 1-64 scaled since matlab doesn't like zeros : intan order
     % below
-     Cambridge156_intan_order=[23, 14, 16, 25, 12, 21, 8, 10, ...% Shank A.
+     Cambridge156_intan_order= [23, 14, 16, 25, 12, 21, 8, 10, ...% Shank A.
                                 22, 9, 20, 63, 2, 17, 30, 5,   ...
-                                26, 13, 11, 23, 14, 27, 26, 6, ...
+                                26, 13, 11, 24, 15, 28, 27, 6, ...
                                 19, 29, 4, 32, 1, 31, 3, 7,    ...
-                                37, 59, 47, 34, 62, 46, 34, 48,...% Shank B
+                                37, 60, 45, 34, 62, 46, 34, 48,...% Shank B
                                 18, 64, 43, 56, 55, 51, 42, 38,...
                                 33, 47, 61, 36, 57, 59, 41, 52,...
                                 50, 39, 54, 58, 44, 40, 53, 49];
 
-     % THIS GOES FROM DORSAL TO VENTRAL - DL
+     % THIS GOES FROM DORSAL TO VENTRAL - DL Intan order verified 61324 RL
 %      intan_to_site_map = intan_amplifier(Cambridge156_order)';   
-     intan_to_site_map_DL = intan_amplifier_DL(Cambridge156_order_DL)';   
+     intan_to_site_map_DL = (Cambridge156_intan_order)';   
 
 elseif strcmpi(probe_type, 'assy236')
 
@@ -158,6 +158,6 @@ elseif strcmpi(probe_type, 'assy236')
 %         42,55,38,43,60,56,52,40];
     
 %    intan_to_site_map = intan_amplifier(Cambridge236_order)';
-   intan_to_site_map_DL = intan_amplifier_DL(Cambridge236_order_DL)';
+   intan_to_site_map_DL = (intan_amplifier_DL)';
 end
 end
