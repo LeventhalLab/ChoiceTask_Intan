@@ -58,8 +58,8 @@ for i_ratfolder = 1 : length(valid_rat_folders)
         % Might be good to add a check here to see if mono_power_fn and/or diff_power_fn
         % exists, if exists skip reading in the data to save time. 
         %Old comment do we need? RL 06/13/24
- 
-        lfp_file = dir(fullfile(session_path_processed, '**', '*_lfp.mat')); 
+        
+        lfp_file = dir(fullfile(session_path_processed,  '*monopolar_lfp.mat')); 
         cd(session_path_processed);
         % lfp = load(lfp_fname.name); % I think the lfp needs to be loaded
         % in the lfp_NNsite_order script in the next line of this fxn.

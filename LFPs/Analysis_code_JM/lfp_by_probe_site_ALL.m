@@ -2,6 +2,8 @@
 % lfp_original = load('R0372_20201125a_lfp.mat'); - sample line of code to
 % load in the lfp_mat file
 
+
+%believed to work but needs verification RL 06/14/24
 function [ordered_lfp, intan_site_order, intan_site_order_for_trials_struct, site_order] = lfp_by_probe_site_ALL(lfp_data, probe_type)
 
 % INPUTS - 
@@ -40,7 +42,7 @@ if strcmpi(probe_type, 'NN8x8')
     else
        lfp_data = lfp_data.lfp;
     end
-
+%%%This is believed to be correct but need confirmation RL 06/14/24
    intan_amplifier = lfp_data([49:56,...%shank1, nn sites 1-8
             57:64,...%shank2
             33:35, 37:39, 41:42,...%shank3
@@ -57,6 +59,8 @@ if strcmpi(probe_type, 'NN8x8')
        44,45,46,43,48,41,47,42,...%shank6
        53,52,54,51,55,50,56,49,...%shank7
        61,60,62,59,63,58,64,57]; %shank8
+ 
+  %Dont think any of these below are needed RL 06/14/24 
    % intan_site_order_for_trials_struct = [54,51,53,52,56,49,55,50,...
    %     62,59,61,60,64,57,63,58,...
    %     38,37,39,35,41,34,42,33,...
@@ -74,15 +78,14 @@ if strcmpi(probe_type, 'NN8x8')
 %             42,47,41,48,43,46,45,44,...%shank6
 %             49,56,50,55,51,54,52,53,...%shank7
 %             57,64,58,63,59,62,60,61];  %shank8
-
-   site_order = [5,4,6,3,7,2,8,1,...%shank1 % These are literal site numbers for the NN probes % using this to name the sites in graphs going from dorsal to ventral
-               13,12,14,11,15,10,16,9,...%shank2
-               21,20,22,19,23,18,24,17,...%shank3
-               29,28,30,27,31,26,32,25,...%shank4
-               37,36,38,35,39,34,40,33,...%shank5
-              45,44,46,43,47,42,48,41,...%shank6
-              53,52,54,51,55,50,56,49,...%shank7
-              61,60,62,59,63,58,64,57]; %shank8
+%   site_order = [5,4,6,3,7,2,8,1,...%shank1 % These are literal site numbers for the NN probes % using this to name the sites in graphs going from dorsal to ventral
+              %  13,12,14,11,15,10,16,9,...%shank2
+              %  21,20,22,19,23,18,24,17,...%shank3
+              %  29,28,30,27,31,26,32,25,...%shank4
+              %  37,36,38,35,39,34,40,33,...%shank5
+              % 45,44,46,43,47,42,48,41,...%shank6
+              % 53,52,54,51,55,50,56,49,...%shank7
+              % 61,60,62,59,63,58,64,57]; %shank8
 
 %    site_order = [1,8,2,7,3,6,4,5,...%shank1 % These are literal site numbers for the NN probes % using this to name the sites in graphs going from ventral to dorsal
 %             9,16,10,15,11,14,12,13,...%shank2
@@ -107,6 +110,7 @@ elseif strcmpi(probe_type, 'ASSY156')
     else
        lfp_data = lfp_data.lfp;
     end
+    %This is believed to be correct but need confirmation RL 06/14/24
      intan_amplifier = lfp_data([1:17,19:32,63,...% Shank A. This is verified RL 06/14/24
         18,33:62, 64],:); % Shank B
     
@@ -118,6 +122,7 @@ elseif strcmpi(probe_type, 'ASSY156')
         33,64,44,57,56,52,43,39,...
         34,48,62,37,58,60,42,53,...
         51,40,55,59,45,41,54,50];
+    %not needed rl 06/14/24
      % intan_site_order_for_trials_struct = [23, 14, 16, 25, 12, 21, 8, 10, ...% Shank A.
      %                            22, 9, 20, 63, 2, 17, 30, 5,   ...
      %                            26, 13, 11, 24, 15, 28, 27, 6, ...
@@ -178,6 +183,9 @@ elseif strcmpi(probe_type, 'ASSY236')
         57,33,61,36,47,39,62,63,...
         48,58,44,53,35,50,64,45,...
         42,55,38,43,60,56,52,40];
+       
+    %not needed rl 06/14/24
+
     % intan_site_order_for_trials_struct = [1,9,21,4,26,5,20,27,...% Shank A % Verified 11/5/2022
     %     6,15,16,32,30,8,13,12,...
     %     11,25,17,3,23,2,10,18,...

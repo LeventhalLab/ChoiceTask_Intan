@@ -76,7 +76,7 @@ if strcmpi(probe_type, 'NN8x8')
 %         49,56,50,55,51,54,52,53,...%shank7
 %         57,64,58,63,59,62,60,61];%shank8
     
-   intan_to_site_map = intan_amplifier(NNsite_order)';            % THIS IS VENTRAL TO DORSAL
+   % intan_to_site_map = intan_amplifier(NNsite_order)';            % THIS IS VENTRAL TO DORSAL
    intan_to_site_map_DL = intan_amplifier_DL(NNsite_order_DL)';   % THIS IS DORSAL TO VENTRAL
    
 elseif strcmpi(probe_type, 'assy156')

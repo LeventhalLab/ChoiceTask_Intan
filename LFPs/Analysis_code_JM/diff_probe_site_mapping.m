@@ -31,8 +31,8 @@ num_lfp_points = size(lfp, 2);
 % pre-allocate memory for differential LFPs
 num_diff_rows = num_sites - num_shanks;
 diff_lfps = zeros(num_diff_rows, num_lfp_points); 
-
-intan_to_site_map = probe_site_mapping(probe_type);
+%Updated code to use new probe map RL 06/14/24
+intan_to_site_map = probe_site_mapping_all_probes(probe_type);
 
 for i_shank = 1 : num_shanks
     diff_start_row = (i_shank - 1) * (sites_per_shank - 1) + 1;

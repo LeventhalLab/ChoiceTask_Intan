@@ -58,8 +58,8 @@ for i_ratfolder = 1 : length(valid_rat_folders)
         % Might be good to add a check here to see if mono_power_fn and/or diff_power_fn
         % exists, if exists skip reading in the data to save time. 
         %Old comment do we need? RL 06/13/24
- 
-        lfp_file = dir(fullfile(session_path_processed, '**', '*_lfp.mat')); 
+        
+        lfp_file = dir(fullfile(session_path_processed,  '*monopolar_lfp.mat')); 
         cd(session_path_processed);
         % lfp = load(lfp_fname.name); % I think the lfp needs to be loaded
         % in the lfp_NNsite_order script in the next line of this fxn.
@@ -78,8 +78,8 @@ for i_ratfolder = 1 : length(valid_rat_folders)
         if num_rows < 64
             continue
         end
-               
-       if ~exist(power_fn, 'file')
+%%% Conditional removed to replace all of the bad/unverified data RL 06/14/24               
+       %if ~exist(power_fn, 'file')
             [ordered_lfp, intan_site_order, site_order] = lfp_by_probe_site_ALL(lfp_data, probe_type); % lfp_by_probe_site_ALL has the three probe types listed. 
                 % Working on changing probe_type to a list of rats with
                 % each probe_type so it runs and writes the diff/monopolars
@@ -87,7 +87,8 @@ for i_ratfolder = 1 : length(valid_rat_folders)
             % lfp_NNsite_order = lfp_by_probe_site(lfp_data, probe_type); % grandfathered code
             [power_lfps, f] = extract_power(ordered_lfp,Fs); % in the original code (LFP, Fs); 
             save(power_fn, 'power_lfps', 'f', 'Fs');
-       end
+       %else     
+       %end
         
        if ~exist(diff_power_fn, 'file')
             % Reorganize by site and calculate the diffs; specify
