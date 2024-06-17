@@ -39,7 +39,7 @@ for i_ratfolder = 1 : length(valid_rat_folders)
         if any(strcmp(session_name, sessions_to_ignore))
             continue;
         end
-
+    %differentiate between probe types
         if contains(ratID, NN8x8)
             probe_type = 'NN8x8'; 
         elseif contains(ratID, ASSY156)
@@ -55,10 +55,7 @@ for i_ratfolder = 1 : length(valid_rat_folders)
         diff_power_fn = [session_name, '_diffpower.mat'];
         diff_power_fn = fullfile(session_path_processed, diff_power_fn);
 
-        % Might be good to add a check here to see if mono_power_fn and/or diff_power_fn
-        % exists, if exists skip reading in the data to save time. 
-        %Old comment do we need? RL 06/13/24
-        
+        % loading in monopolar lfp file
         lfp_file = dir(fullfile(session_path_processed,  '*monopolar_lfp.mat')); 
         cd(session_path_processed);
         % lfp = load(lfp_fname.name); % I think the lfp needs to be loaded
