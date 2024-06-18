@@ -16,10 +16,10 @@ Fs = 500;
 % lfp_fname = dir(fullfile(intan_choicetask_parent,'**','*_lfp.mat')); % This
 % generates a matrix of '*_lfp.mat' filenames
 
-NN8x8 = ["R0326", "R0327", "R0372", "R0379", "R0374", "R0376", "R0378", "R0394", "R0395", "R0396", "R0412", "R0413"]; % Specify list of ratID associated with each probe_type
-ASSY156 = ["R0411", "R0419"];
-ASSY236 = ["R0420", "R0425", "R0427", "R0457", "R0456", "R0459", "R0460", "R0463", "R0465", "R0466","R0493","R0492","R0494","R0495"];
-
+%NN8x8 = ["R0326", "R0327", "R0372", "R0379", "R0374", "R0376", "R0378", "R0394", "R0395", "R0396", "R0412", "R0413"]; % Specify list of ratID associated with each probe_type
+%ASSY156 = ["R0411", "R0419"];
+ASSY236 = ["R0425", "R0427", "R0457", "R0456", "R0459", "R0460", "R0463", "R0465", "R0466","R0493","R0492","R0494","R0495"];
+%removing 420 temporarily since it was already ran 06/18/24 RL
 sessions_to_ignore = {'R0378_20210507a', 'R0425_20220728a', 'R0427_20220920a'}; % R0425_20220728a debugging because the intan side was left on for 15 hours; 
 % R0427_20220920a does not have an 'info.rhd' file
 
@@ -39,13 +39,17 @@ for i_ratfolder = 1 : length(valid_rat_folders)
         if any(strcmp(session_name, sessions_to_ignore))
             continue;
         end
-
+    %differentiate between probe types
         if contains(ratID, NN8x8)
             probe_type = 'NN8x8'; 
         elseif contains(ratID, ASSY156)
             probe_type = 'ASSY156';
         elseif contains(ratID, ASSY236)
             probe_type = 'ASSY236';
+        end
+     %Adding temporary conditional to ignore rats already processed   
+        if strcmp(probe_type, 'NN8x8') || strcmp(probe_type, 'ASSY156') || strcmp(ratID, 'R0420')
+            continue;
         end
 
         % create filenames to hold mono- and diff-LFPs
@@ -55,7 +59,7 @@ for i_ratfolder = 1 : length(valid_rat_folders)
         diff_power_fn = [session_name, '_diffpower.mat'];
         diff_power_fn = fullfile(session_path_processed, diff_power_fn);
 
-        % 
+        % loading in monopolar lfp file
         lfp_file = dir(fullfile(session_path_processed,  '*monopolar_lfp.mat')); 
         cd(session_path_processed);
         % lfp = load(lfp_fname.name); % I think the lfp needs to be loaded
@@ -84,8 +88,8 @@ for i_ratfolder = 1 : length(valid_rat_folders)
             % lfp_NNsite_order = lfp_by_probe_site(lfp_data, probe_type); % grandfathered code
             disp('Calculating monopolar power')
             [power_lfps, f] = extract_power(ordered_lfp,Fs); % in the original code (LFP, Fs); 
-            save(power_fn, 'power_lfps', 'f', 'Fs');
-            disp(['LFPs ordered and monopolar power created for ', lfp_file.name])
+             save(power_fn, 'power_lfps', 'f', 'Fs');
+             disp(['LFPs ordered and monopolar power created for ', lfp_file.name])
        % %else
        %      %disp(['Monopolar power already calculated for ', lfp_file.name])
        % %end

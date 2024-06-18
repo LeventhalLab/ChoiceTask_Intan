@@ -1,4 +1,4 @@
-function intan_to_site_map_DL = probe_site_mapping_all_probes(probe_type)
+function intan_to_site_map_DL = probe_site_mapping_all_probes_old(probe_type)
 
 % INPUTS:
     % probe_type - this current mapping is for the  NeuroNexus H64LP A8x8 probe.
