@@ -4,11 +4,8 @@ intan_choicetask_parent = 'X:\Neuro-Leventhal\data\ChoiceTask';
 
 % loop through all the processed data folders here, load the lfp file
 valid_rat_folders = find_processed_folders(intan_choicetask_parent);
-% name2chk=extractfield(valid_rat_names,'name');
-% name2chk=cellfun(@(X) X(end-4:end),name2chk);
-% badfldrs=extractfield(valid_rat_names,'processed_folders');
-% badfldrs()
-
+name2chk=extractfield(valid_rat_names,'name');
+name2chk=cellfun(@(X) )
 valid_trials_folder = find_trials_struct_folders(intan_choicetask_parent);
 %summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx'; maybe add this similar to
 %the extract_monopolar_lfp_DL script so don't need to update this

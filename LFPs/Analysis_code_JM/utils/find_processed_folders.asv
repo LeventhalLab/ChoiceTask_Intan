@@ -75,7 +75,7 @@ for i_ratfolder = 1 : num_valid_rat_folders
         valid_rat_folder(num_rat_folders_with_processed_data).name = rat_folders{i_ratfolder};
         valid_rat_folder(num_rat_folders_with_processed_data).processed_folders = processed_datafolders;
     end
-    clear processed_datafolders
+    
 end
 % Display valid rat folders for debugging
 disp('Valid rat folders found:');
