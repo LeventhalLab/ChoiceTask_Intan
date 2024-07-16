@@ -19,7 +19,7 @@ elseif isempty(rhd_file)
     return
 end
 
-amp_file = dir('amplifier.dat'); %rename for Watson Data; change back to amplifier.dat
+amp_file = dir('amplifier.dat'); 
 if isempty(amp_file)
     error('no amplifier files found in ' + intan_folder);
     return
