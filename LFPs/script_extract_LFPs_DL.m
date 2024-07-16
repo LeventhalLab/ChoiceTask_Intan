@@ -51,10 +51,10 @@ for i_rat = 1 : num_rats
         if ~isfolder(processed_session_folder)
             mkdir(processed_session_folder)
         end
-%         if isfile(lfp_fname)
-%             sprintf('%s already calculated, skipping', lfp_fname)
-%             continue
-%         end
+        if isfile(lfp_fname)
+            sprintf('%s already calculated, skipping', lfp_fname)
+            continue
+        end
 
         sprintf('working on %s', session_name)
         [lfp, actual_Fs] = calculate_monopolar_LFPs(phys_folder, target_Fs, convert_to_microvolts);
