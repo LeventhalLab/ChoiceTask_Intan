@@ -463,7 +463,11 @@ if trialCorrectFlag
             trialData.timestamps.sideIn = sideInAfterCue(1); % Patched for sideIn timestamp empty JM 20200612
             trialData.timestamps.sideOut = ...
                 events{NoseOutidx(CueID(1) - 1)}.timestamps(events{NoseOutidx(CueID(1) - 1)}.timestamps > NoseInTS(1));
-            trialData.timestamps.sideOut = trialData.timestamps.sideOut(1);
+            try
+                trialData.timestamps.sideOut = trialData.timestamps.sideOut(1);
+            catch
+                keyboard
+            end
             trialData.timestamps.foodClick = trialEvents{FHidx}.timestamps;
 
             trialData.timing.MT = trialData.timestamps.sideIn - ...  % Patched for sideIn timestamp empty JM 20200612 R0326_20200226 trial 162 example

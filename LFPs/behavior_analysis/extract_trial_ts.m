@@ -1,5 +1,7 @@
 function trial_ts = extract_trial_ts(trials, eventFieldnames)
 %
+% function to return a vector of timestamps given a trials data structure
+% and a cell array of event names
 %
 % INPUTS
 %   trials - trials structure
@@ -12,9 +14,8 @@ function trial_ts = extract_trial_ts(trials, eventFieldnames)
 %         timestamps column in the trials structure.
 %
 % OUTPUTS
-%   trial_ts - m x n x 2 array, where m is the number of fields being
-%       analyzed, n is the number of trials, and the last two elements
-%       contain the start and end time for each window
+%   trial_ts - m x n array, where m is the number of fields being
+%       analyzed and n is the number of trials
 
 trial_ts = NaN(numel(eventFieldnames),numel(trials));
 for iField = 1:numel(eventFieldnames)
