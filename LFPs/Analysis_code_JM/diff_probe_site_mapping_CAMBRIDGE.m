@@ -26,7 +26,7 @@ else
     lfp = lfp_data.lfp;
 end
 
-num_shanks = 4; %number of shanks on NN probe
+num_shanks = 4; %number of columns on cambridge probe
 num_sites = size(lfp, 1);
 sites_per_shank = num_sites/num_shanks;
 num_lfp_points = size(lfp, 2);
