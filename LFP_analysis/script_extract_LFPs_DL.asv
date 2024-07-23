@@ -61,12 +61,11 @@ for i_rat = 1 : num_rats
             sprintf('%s already calculated, skipping', lfp_fname)
             continue
         else
-            sprintf('working on %s', session_name)
             [lfp, actual_Fs] = calculate_monopolar_LFPs_DL(phys_folder, target_Fs, convert_to_microvolts);
-            save(full_lfp_name, 'lfp', 'actual_Fs', 'convert_to_microvolts');
+        
         end
 
-        %sprintf('working on %s', session_name)
+        sprintf('working on %s', session_name)
         %[lfp, actual_Fs] = calculate_monopolar_LFPs_DL(phys_folder, target_Fs, convert_to_microvolts);
 
         %    %commented out for testing purposes 7/16/24

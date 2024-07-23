@@ -1,7 +1,7 @@
 function [artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold)
     num_channels = size(lfp, 1);
     num_samples = size(lfp, 2);
-    artifact_mask = false(num_channels, num_samples);
+    artifact_mask_logical = false(num_channels, num_samples);
     artifact_timestamps = cell(num_channels, 1);
 
     for ch = 1:num_channels
