@@ -13,7 +13,7 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 
 %Commented out for now throws error and dont think its needed 08/13/24--RL
 %[rat_nums, ratIDs, ratIDs_goodhisto] = get_rats2process(summary_xls);
-ratIDs=probe_types.ratID;
+ratIDs=probe_types.ratID
 target_Fs = 500;   % in Hz, target LFP sampling rate after decimating the raw signal
 
 num_rats = length(ratIDs);

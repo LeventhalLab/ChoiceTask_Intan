@@ -1,18 +1,23 @@
-function [artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold)
+function [artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold, disconnect, actual_Fs)
     num_channels = size(lfp, 1);
     num_samples = size(lfp, 2);
     artifact_mask = false(num_channels, num_samples);
     artifact_timestamps = cell(num_channels, 1);
 
+    % Create time vector
+    time_vector = (0:num_samples-1) / actual_Fs;
+
+    %artifact_zeros = zeros(num_channels, num_samples);  % Initializes with zeros
     for ch = 1:num_channels
         % Find where the signal exceeds the threshold
-        artifact_indices = find(abs(lfp(ch, :)) > threshold);
+        artifact_indices = find(abs(lfp(ch, :)) > threshold | abs(lfp(ch, :)) == disconnect);
         
         % Mark these indices in the artifact mask
         artifact_mask(ch, artifact_indices) = true;
 
         % Create timestamps for the artifacts
-        artifact_timestamps{ch} = artifact_indices;
+        artifact_timestamps{ch} = time_vector(artifact_indices);
+        %cellfun(@(X) time_vector(X),artifact_timestamps,'UniformOutput',false)
     end
 end
 %function [clean_lfp, artifact_mask, artifact_timestamps] = reject_artifacts(lfp_data, threshold, min_duration)

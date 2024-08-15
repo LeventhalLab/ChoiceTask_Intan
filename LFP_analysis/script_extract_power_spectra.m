@@ -54,9 +54,9 @@ for i_ratfolder = 1 : length(valid_rat_folders)
         end
      %Adding temporary conditional to ignore R0419 since Zoe is working
      %with this rat for downstream analysis 06/18/24
-        if strcmp(ratID, 'R0419') || strcmp(ratID, 'R0326')  %|| strcmp(probe_type, 'ASSY156') || strcmp(ratID, 'R0425')
-            continue;
-        end
+        % if strcmp(ratID, 'R0419') || strcmp(ratID, 'R0326')  %|| strcmp(probe_type, 'ASSY156') || strcmp(ratID, 'R0425')
+        %     continue;
+        % end
 
         % create filenames to hold mono- and diff-LFPs
         power_fn = [session_name, '_monopolarpower.mat'];

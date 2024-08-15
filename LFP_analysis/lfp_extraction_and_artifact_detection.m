@@ -9,7 +9,7 @@ sessions_to_ignore = {'R0378_20210507a', 'R0326_20191107a', 'R0425_20220728a', '
 
 probe_type_sheet = 'probe_type';
 probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
-% NOTE - UPDATE FUNCTION read_Jen_xls_summary WHEN WE NEED OTHER
+% NOTE - UPDATE FUNCTION read_Jen_xls_summary WHEN WE NEED OTHER%
 % INFORMATION OUT OF THAT SPREADSHEET
 
 %[rat_nums, ratIDs, ratIDs_goodhisto] = get_rat_list();
@@ -17,7 +17,8 @@ ratIDs=probe_types.ratID;
 target_Fs = 500;   % in Hz, target LFP sampling rate after decimating the raw signal
 convert_to_microvolts = true;
 threshold = 1000;  % amplitude threshold in microvolts
-min_duration = actual_Fs / 10;  % minimum duration for artifact in samples (e.g., 100 ms)
+disconnect = 0;
+%min_duration = actual_Fs / 10;  % minimum duration for artifact in samples (e.g., 100 ms)
 num_rats = length(ratIDs);
 
 for i_rat = 1 : num_rats
@@ -57,30 +58,30 @@ for i_rat = 1 : num_rats
         if ~isfolder(processed_session_folder)
             mkdir(processed_session_folder)
         end
-        %check to see if lfp exists, if it does, check for artifacts, if
-        %not calculate lfps
+        %check to see if lfp exists, if it does, check for artifacts; if
+        %not calculate lfps then check for artifacts
         if isfile(full_lfp_name) == 1 
             sprintf('LFPs calculated for %s', full_lfp_name)
-            variables_in_file = who('-file', full_lfp_name);
+            % variables_in_file = who('-file', full_lfp_name);
             %Check to see if artifact mask already found skip if done 
-            if ismember('artifact_mask', variables_in_file)
-                fprintf('%s already contains artifact_mask, skipping\n', lfp_fname);
-                continue;
-            else
-                fprintf('Appending artifact_mask to %s\n', lfp_fname);
+            % if ismember('artifact_mask', variables_in_file)
+            %     fprintf('%s already contains artifact_mask, skipping\n', lfp_fname);
+            %     continue;
+            % else
+            fprintf('Appending artifact_mask to %s\n', lfp_fname);
                 % Load existing LFP data
-                load(full_lfp_name, 'lfp', 'actual_Fs', 'convert_to_microvolts');
-                % Perform artifact rejection:: Removed minimum duration
-                % requirement 7/17/24
-                [artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold);
-                % Append the artifact_mask and artifact_timestamps to the file
-                save(full_lfp_name, 'artifact_mask', 'artifact_timestamps', '-append');
-            end
+            load(full_lfp_name, 'lfp', 'actual_Fs', 'convert_to_microvolts');
+                    % Perform artifact rejection:: Removed minimum duration
+                    % requirement 7/17/24
+            [artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold, disconnect, actual_Fs);
+                    % Append the artifact_mask and artifact_timestamps to the file
+            save(full_lfp_name, 'artifact_mask', 'artifact_timestamps', '-append');
+            %end
         else
             %Run both LFP calculations and artifact detection
             sprintf('working on calculating LFPs and artifact detection for %s', session_name)
             [lfp, actual_Fs] = calculate_monopolar_LFPs_DL(phys_folder, target_Fs, convert_to_microvolts);
-            [~, artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold, min_duration);
+            [artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold, disconnect, actual_Fs);
             save(full_lfp_name, 'lfp', 'actual_Fs', 'convert_to_microvolts', 'artifact_mask', 'artifact_timestamps');
         end
 
