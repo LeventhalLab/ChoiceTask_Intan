@@ -66,7 +66,7 @@ for i_rat = 1 : length(rats_with_intan_sessions)
         end
         % update here for next steps in calculating perievent scalograms
         rd_metadata = parse_rawdata_folder(session_folder);
-        session_pf = processed_data_folder_from_rd_metadata(rd_metadata, intan_parent_directory);
+        session_pf = create_processed_data_folder(rd_metadata, intan_parent_directory);
         mono_lfpfile = 
         sprintf('placeholder')
     end

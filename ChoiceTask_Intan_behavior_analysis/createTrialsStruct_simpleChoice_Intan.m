@@ -463,11 +463,15 @@ if trialCorrectFlag
             trialData.timestamps.sideIn = sideInAfterCue(1); % Patched for sideIn timestamp empty JM 20200612
             trialData.timestamps.sideOut = ...
                 events{NoseOutidx(CueID(1) - 1)}.timestamps(events{NoseOutidx(CueID(1) - 1)}.timestamps > NoseInTS(1));
-            try
+            if ~isempty(trialData.timestamps.sideOut)
+                % there might not be a side out event at the end of a
+                % session if the rat pokes into the side port but does not 
+                % pull back out before the session ends. This makes sure if
+                % there is no SideOut event it doesn't try to write one
+                % into the structure and throw an error
                 trialData.timestamps.sideOut = trialData.timestamps.sideOut(1);
-            catch
-                keyboard
             end
+
             trialData.timestamps.foodClick = trialEvents{FHidx}.timestamps;
 
             trialData.timing.MT = trialData.timestamps.sideIn - ...  % Patched for sideIn timestamp empty JM 20200612 R0326_20200226 trial 162 example

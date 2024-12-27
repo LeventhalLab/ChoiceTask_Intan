@@ -22,7 +22,7 @@ rats_with_intan_sessions = find_rawdata_folders(intan_parent_directory);
 % the recorded channels, NOT the order of electrical sites along each probe
 % shank
 
-probe_mapping_fname = fullfile(intan_parent_directory, 'Probe Histology Summary', 'ProbeSite_Mapping_MATLAB.xlsx');
+probe_mapping_fname = fullfile(intan_parent_directory, 'Probe Histology Summary', 'ProbeSite_Mapping_MATLAB_RL2.xlsx');
 
 probe_type_sheet = 'probe_type';
 probe_types = read_choicetask_xls_summary(probe_mapping_fname, probe_type_sheet);

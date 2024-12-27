@@ -1,9 +1,10 @@
 % script to calculate LFPs for all of Jen's rats; store in files in
 % the processed data folders
 
-parent_directory = 'Z:\data\ChoiceTask\';
-summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
-summary_xls_dir = 'Z:\data\ChoiceTask\Probe Histology Summary';
+sharedX_drive = 'X:';
+parent_directory = fullfile(sharedX_drive, 'data\ChoiceTask\');
+summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
+summary_xls_dir = fullfile(sharedX_drive, 'data\ChoiceTask\Probe Histology Summary');
 summary_xls = fullfile(summary_xls_dir, summary_xls);
 
 probe_type_sheet = 'probe_type';
@@ -11,7 +12,7 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 % NOTE - UPDATE FUNCTION read_Jen_xls_summary WHEN WE NEED OTHER
 % INFORMATION OUT OF THAT SPREADSHEET
 
-[rat_nums, ratIDs, ratIDs_goodhisto] = get_rat_list();
+[ratIDs, ratIDs_goodhisto] = get_rat_list('all', parent_directory);
 
 target_Fs = 500;   % in Hz, target LFP sampling rate after decimating the raw signal
 convert_to_microvolts = false;

@@ -1,9 +1,16 @@
-function [ratIDs, ratIDs_goodhisto] = get_rat_list(rats_to_analyze)
+function [ratIDs, ratIDs_goodhisto] = get_rat_list(rats_to_analyze, parent_directory)
 % list of rats to be analyzed from thalamic recordings
 % update rat_nums (and hopefully not ratnums_with_bad_histo) to indicate
 % which rats should be analyzed
 
 % rat_nums = [326, 327, 372, 374, 376, 378, 379, 394, 395, 396, 411, 412, 413, 419, 420, 425];
+
+if ischar(rats_to_analyze)
+    if strcmpi(rats_to_analyze, 'all')
+        % add code here to use all the folders if needed, but I think this
+        % is an obsolete function
+    end
+end
 
 ratnums_with_bad_histo = [374, 376, 396, 413];
 

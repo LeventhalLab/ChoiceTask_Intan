@@ -18,6 +18,14 @@ probe_site_mapping = probe_site_mapping_all_probes(probe_type);
 % first, rearrange field potentials so they are sorted from dorsal to
 % ventral
 
+n_channels = size(lfp, 1);
+n_probesites = size(probe_site_mapping, 1);
+if n_channels ~= n_probesites
+    fprintf('number of monopolar lfp channels is different from number of probe sites\n')
+    bipolar_LFPs = [];
+    return
+end
+
 sorted_lfps = lfp(probe_site_mapping, :);
 num_lfps = size(lfp, 1);   % assume each row is a recording channel
 num_pts = size(lfp, 2);

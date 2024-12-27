@@ -1,4 +1,4 @@
-function session_pf = create_processed_data_folder(rd_metadata, parent_directory)
+function session_pf = processed_data_folder_from_rd_metadata(rd_metadata, parent_directory)
 %
 % INPUTS
 %   rd_metadata - structure with the following fields:
@@ -7,10 +7,5 @@ function session_pf = create_processed_data_folder(rd_metadata, parent_directory
 %           made
 %       .session_name - ratID_YYYYMMDDz, where z is "a", "b", "c", etc.
 
-session_pf = processed_data_folder_from_rd_metadata(rd_metadata, parent_directory);
-
-if ~isfolder(session_pf)
-    
-    mkdir(session_pf)
-    
-end
+pf = strcat(rd_metadata.ratID, '-processed');
+session_pf = fullfile(parent_directory, rd_metadata.ratID, pf, rd_metadata.session_name);

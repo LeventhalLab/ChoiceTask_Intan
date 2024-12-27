@@ -1,0 +1,24 @@
+function [outputArg1,outputArg2] = perievent_scalograms(trials, lfp_file, eventList, t_win)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+
+% possible events:
+%   cueOn, houseLightOn, centerIn, centerOut
+
+[lfp_folder, ~, ~] = fileparts(lfp_file);
+
+n_trials = length(trials);
+n_events = length(eventList);
+
+for i_trial = 1 : n_trials
+
+    tr = trials(i_trial);
+
+    for i_event = 1 : n_events
+    if isfield(tr.timestamps, eventName)
+end
+
+event_related_scalos
+outputArg1 = inputArg1;
+outputArg2 = inputArg2;
+end
