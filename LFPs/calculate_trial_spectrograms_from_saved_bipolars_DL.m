@@ -86,6 +86,11 @@ for i_rat = 1 : n_rats
                 continue
             end
 
+            all_scalos_calculated = check_scalograms_calculated(session_name, event_list, lfp_type, probe_type, parent_directory);
+            if all_scalos_calculated
+                sprintf('all scalograms calculated for %s, %s trials', session_name, trials_to_analyze)
+                continue
+            end
             lfp_data = load(lfp_fname);
 
             if strcmpi(lfp_type, 'bipolar')
@@ -96,7 +101,7 @@ for i_rat = 1 : n_rats
             end
 
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
-            num_channels = size(ordered_lfp, 1);
+            n_channels = size(ordered_lfp, 1);
 
             for i_event = 1 : length(event_list)
                 event_name = event_list{i_event};
@@ -111,7 +116,7 @@ for i_rat = 1 : n_rats
                     mkdir(scalo_folder)
                 end
         
-                for i_channel = 1 : num_channels
+                for i_channel = 1 : n_channels
                     [shank_num, site_num] = get_shank_and_site_num(probe_lfp_type, i_channel);
         
                     scalo_name = sprintf('%s_scalos_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, event_name, shank_num, site_num);

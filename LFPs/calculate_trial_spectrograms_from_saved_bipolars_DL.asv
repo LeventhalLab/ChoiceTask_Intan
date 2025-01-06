@@ -62,34 +62,24 @@ for i_rat = 1 : n_rats
             sprintf('no %s trials found for %s', trials_to_analyze, session_name)
             continue
         end
-
-        lfp_fname = strcat(session_name, '_', i_lfptype'_', '_lfp.mat');
-        lfp_fname = fullfile(cur_dir, lfp_fname);
-        if ~isfile(lfp_fname)
-            sprintf('%s not found, skipping', lfp_fname)
-            continue
-        end
-
-        lfp_data = load(lfp_fname);
-
-        Fs = lfp_data.actual_Fs;
-        samp_window = round(t_window * Fs);
-        samples_per_event = range(samp_window) + 1;
-        fb = cwtfilterbank('signallength', samples_per_event, ...
-                'samplingfrequency', Fs, ...
-                'wavelet','amor',...
-                'frequencylimits', [1, 100]);
+        % 
+        % lfp_data = load(lfp_fname);
+        % 
+        % Fs = lfp_data.actual_Fs;
+        % samp_window = round(t_window * Fs);
+        % samples_per_event = range(samp_window) + 1;
+        % fb = cwtfilterbank('signallength', samples_per_event, ...
+        %         'samplingfrequency', Fs, ...
+        %         'wavelet','amor',...
+        %         'frequencylimits', [1, 100]);
 
 %         [ordered_lfp, intan_site_order, intan_site_order_for_trials_struct, site_order] = lfp_by_probe_site_ALL(lfp_data, probe_type);
 
         for i_lfptype = 1 : length(lfp_types)
 
             lfp_type = lfp_types{i_lfptype};
-            if strcmpi(lfp_type, 'bipolar')
-                lfp_fname = strcat(session_name, '_bipolar_lfp.mat');
-            else
-                lfp_fname = strcat(session_name, '_lfp.mat');
-            end
+            lfp_fname = strcat(session_name, '_', lfp_type, '_lfp.mat');
+
             lfp_fname = fullfile(cur_dir, lfp_fname);
             if ~isfile(lfp_fname)
                 sprintf('%s not found, skipping', lfp_fname)
@@ -106,7 +96,7 @@ for i_rat = 1 : n_rats
             end
 
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
-            num_channels = size(ordered_lfp, 1);
+            n_channels = size(ordered_lfp, 1);
 
             for i_event = 1 : length(event_list)
                 event_name = event_list{i_event};
@@ -121,7 +111,7 @@ for i_rat = 1 : n_rats
                     mkdir(scalo_folder)
                 end
         
-                for i_channel = 1 : num_channels
+                for i_channel = 1 : n_channels
                     [shank_num, site_num] = get_shank_and_site_num(probe_lfp_type, i_channel);
         
                     scalo_name = sprintf('%s_scalos_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, event_name, shank_num, site_num);

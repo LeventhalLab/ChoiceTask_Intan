@@ -1,12 +1,8 @@
-function [column_num,site_num] = get_shank_and_site_num(probe_lfp_type, row_idx)
+function n_channels = n_channels_from_probetype(probe_type, lfp_type)
 %UNTITLED7 Summary of this function goes here
 % INPUTS
-%   row_idx = the index of the row in the ordered_lfp array. It should be
-%       ordered such that we start at shank 1, most dorsal site, then go
-%       down the shank to site 8 (most ventral sitefor an NN8x8), then 
-%       shank 2 running from dorsal to ventral, etc. For a Cambridge probe,
-%       it should start at the most dorsal site and go down 16 sites, with
-%       4 columns of electrodes total
+%   probe_type - 
+%   lfp_type - 
 %  
 % OUTPUTS
 %   column_num - number of recording column - could be a single shank, or
@@ -16,24 +12,27 @@ function [column_num,site_num] = get_shank_and_site_num(probe_lfp_type, row_idx)
 %       dorsal, site 2 ventral to site 1, etc, then start over in the next
 %       column
 
-probe_parts = split(probe_lfp_type, '_');
-
 % which style of probe was used?
-switch lower(probe_parts{1})
+switch lower(probe_type)
     case 'nn8x8'
         % 8 shanks with 8 sites each
         sites_per_column = 8;
+        total_channels = 64;    % if add new probe types later
     
     case 'assy156'
         sites_per_column = 16;
+        total_channels = 64;    % if add new probe types later
 
     case 'assy236'
         sites_per_column = 16;
+        total_channels = 64;    % if add new probe types later
 
 end
 
+n_columns = total_channels / sites_per_column;
+
 % monopolar vs bipolar
-switch lower(probe_parts{2})
+switch lower(lfp_type)
 
     case 'monopolar'
         signals_per_column = sites_per_column;
@@ -43,5 +42,4 @@ switch lower(probe_parts{2})
 
 end
 
-column_num = ceil(row_idx / signals_per_column);
-site_num = row_idx - (column_num-1) * signals_per_column;
+n_channels = signals_per_column * n_columns;
