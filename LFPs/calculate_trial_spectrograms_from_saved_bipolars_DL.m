@@ -8,6 +8,11 @@ summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
 summary_xls_dir = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
 
+% channel quality checking
+histo_folder = fullfile(parent_directory, 'Probe Histology Summary');
+qc_file = 'channels_qc_final.xlsx';
+qc_file = fullfile(histo_folder, qc_file);
+
 % change the line below to allow looping through multiple trial types,
 % extract left vs right, etc.
 trials_to_analyze = 'correct';

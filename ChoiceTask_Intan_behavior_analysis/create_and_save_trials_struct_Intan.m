@@ -8,10 +8,12 @@
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
 
 [ratIDs, ratIDs_goodhisto] = get_rat_list('all', parent_directory);
+sessions_to_skip = {'R0425_20220728a'};
+% for some reason, R0425_20220728a has a super-long recording -
+% digitalin.dat is too big to load (> 3 GB)
+n_rats = length(ratIDs);
 
-num_rats = length(ratIDs);
-
-for i_rat = 1 : num_rats
+for i_rat = 22 : n_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
 
@@ -28,15 +30,18 @@ for i_rat = 1 : num_rats
     for i_session = 1 : num_sessions
         
         session_name = session_dirs(i_session).name;
+        if ismember(session_name, sessions_to_skip)
+            continue
+        end
         cur_processed_dir = fullfile(session_dirs(i_session).folder, session_name);
         cur_rawdata_dir = fullfile(rawdata_folder, session_name);
         cd(cur_processed_dir)
 
-        lfp_fname = strcat(session_name, '_lfp.mat');
-        if ~isfile(lfp_fname)
-            sprintf('%s not found, skipping', lfp_fname)
-            continue
-        end
+        % lfp_fname = strcat(session_name, '_lfp.mat');
+        % if ~isfile(lfp_fname)
+        %     sprintf('%s not found, skipping', lfp_fname)
+        %     continue
+        % end
 
         trials_name = sprintf('%s_trials.mat', session_name);
         trials_name = fullfile(cur_processed_dir, trials_name);
@@ -55,20 +60,31 @@ for i_rat = 1 : num_rats
             continue
         end
 
-        nexData = extractEventsFromIntanSystem(rawdata_ephys_folder);
-        if isempty(nexData)
-            % something was wrong with the analog/digital input files from
-            % the intan system
-            sprintf('nexData could not be generated for %s', session_name)
-            continue
-        end
-
         log_file = find_log_file(session_name, parent_directory);
         if isempty(log_file)
             fprintf('log file not found for %s\n', session_name)
             continue
         end
         logData = readLogData(log_file);
+        
+        try
+            nexData = extractEventsFromIntanSystem(rawdata_ephys_folder);
+        catch
+            sprintf('problem generating nexData for %s', session_name)
+            % some sessions there is a mismatch between digital samples
+            % acquired and analog/amplifier signals acquired (generally
+            % more on the digital lines). Why is that? Will things like up
+            % if we take just the start or the end of the digital signals
+            % to make them match with the analog? For now, just skipping
+            % those sessions, unless there's a lot of them.
+            continue
+        end
+        if isempty(nexData)
+            % something was wrong with the analog/digital input files from
+            % the intan system
+            sprintf('nexData could not be generated for %s', session_name)
+            continue
+        end
 
         sprintf('loaded logData and nexData for %s', session_name)
 

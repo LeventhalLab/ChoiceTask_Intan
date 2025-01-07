@@ -87,7 +87,7 @@ for i_rat = 1 : length(rats_with_intan_sessions)
                 continue
             end
 
-            save(bp_lfpname, 'bipolar_lfp', 'actual_Fs', 'probe_type', 'intan2probe_mapping', 'full_lfp_name', '-v7.3');
+            save(bp_lfpname, 'bipolar_lfp', 'actual_Fs', 'probe_type', 'intan2probe_mapping', 'full_lfp_name', 'convert_to_microvolts', '-v7.3');
 
         end
         
