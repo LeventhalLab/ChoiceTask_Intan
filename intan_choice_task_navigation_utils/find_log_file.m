@@ -16,7 +16,7 @@ poss_logs = dir(test_name);
 
 log_fname = '';
 if isempty(poss_logs)
-    sprintf('no log file found for %s', session_name);
+    sprintf('no log file found for %s', session_name)
 else
     for ii = 1 : length(poss_logs)
         if contains(poss_logs(ii).name, 'old')

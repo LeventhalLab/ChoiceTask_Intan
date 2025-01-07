@@ -4,9 +4,10 @@
 % structure for each session, save in the processed data folder to save
 % time
 
-parent_directory = 'Z:\data\ChoiceTask\';
+% parent_directory = 'Z:\data\ChoiceTask\';
+parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
 
-[rat_nums, ratIDs, ratIDs_goodhisto] = get_rat_list();
+[ratIDs, ratIDs_goodhisto] = get_rat_list('all', parent_directory);
 
 num_rats = length(ratIDs);
 
@@ -33,7 +34,7 @@ for i_rat = 1 : num_rats
 
         lfp_fname = strcat(session_name, '_lfp.mat');
         if ~isfile(lfp_fname)
-            sprintf('%s not found, skipping', lfp_file)
+            sprintf('%s not found, skipping', lfp_fname)
             continue
         end
 
@@ -63,6 +64,10 @@ for i_rat = 1 : num_rats
         end
 
         log_file = find_log_file(session_name, parent_directory);
+        if isempty(log_file)
+            fprintf('log file not found for %s\n', session_name)
+            continue
+        end
         logData = readLogData(log_file);
 
         sprintf('loaded logData and nexData for %s', session_name)
