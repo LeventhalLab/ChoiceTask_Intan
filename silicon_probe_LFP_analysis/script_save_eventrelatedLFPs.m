@@ -41,6 +41,7 @@ for i_rat = 1 : n_rats
     end
 
     probe_type = probe_types{probe_types.ratID == ratID, 2};
+    probe_site_mapping = probe_site_mapping_all_probes(probe_type);
     processed_folder = find_data_folder(ratID, 'processed', parent_directory);
     session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));
     num_sessions = length(session_dirs);
@@ -104,7 +105,6 @@ for i_rat = 1 : n_rats
                 probe_site_mapping = lfp_data.intan2probe_mapping;
             else
                 ordered_lfp = lfp_data.lfp(probe_site_mapping, :);
-                probe_site_mapping = probe_site_mapping_all_probes(probe_type);
             end
 
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
