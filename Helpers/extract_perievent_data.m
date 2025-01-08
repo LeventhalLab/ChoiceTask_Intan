@@ -22,6 +22,12 @@ total_samples = size(ephys_data, 2);
 
 samp_window = round(t_window * Fs);
 center_samps = round(ts * Fs);
+
+if isrow(center_samps)
+    % make sure center_samps is a column vector so we can add samp_window
+    center_samps = center_samps';
+end
+
 samp_windows = center_samps + samp_window;
 samps_per_window = range(samp_window) + 1;
 

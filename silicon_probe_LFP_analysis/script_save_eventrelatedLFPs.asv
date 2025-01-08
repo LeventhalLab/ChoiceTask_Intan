@@ -132,12 +132,11 @@ for i_rat = 1 : n_rats
                 if isfield(lfp_data, 'artifact_timestamps')
                     artifact_timestamps = lfp_data.artifact_timestamps;
                 else
-                    artifact_timestamps = cell(n_channels, 1);
-                end
+                    artifact_timestamps = 
 
                 if strcmpi(lfp_type, 'monopolar')
                     note = 'monopolar LFPs in site order, NOT original recording order';
-                    save(ERP_name, 'event_related_scalos', 'event_triggered_lfps', 't_window', 'i_channel', 'trials', 'Fs', 'probe_type', 'artifact_timestamps', 'note');
+                    save(ERP_name, 'event_related_scalos', 'event_triggered_lfps', 't_window', 'i_channel', 'trials', 'Fs', 'probe_type', 'artifact_mask', 'artifact_timestamps', 'note');
                 else
                     note = 'bipolar LFPs in site order';
                     save(ERP_name, 'event_related_scalos', 'event_triggered_lfps', 't_window', 'i_channel', 'trials', 'Fs', 'probe_type', 'intan2probe_mapping', 'note');

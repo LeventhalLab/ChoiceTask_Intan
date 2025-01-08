@@ -17,6 +17,12 @@ function trial_ts = extract_trial_ts(trials, eventFieldnames)
 %   trial_ts - m x n array, where m is the number of fields being
 %       analyzed and n is the number of trials
 
+if ~iscell(eventFieldnames)
+    % eventFieldnames was probably provided as a string instead of a cell
+    % array of strings, which is going to mess up the array
+    eventFieldnames = {eventFieldnames};
+end
+
 trial_ts = NaN(numel(eventFieldnames),numel(trials));
 for iField = 1:numel(eventFieldnames)
     for iTrial = 1:numel(trials)
