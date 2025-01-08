@@ -1,4 +1,4 @@
-function ERPs_folder = create_ERPs_folder(session_name,event_name,parent_directory)
+function ERPs_folder = create_ERPs_folder(session_name,parent_directory)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -9,7 +9,7 @@ processed_folder = find_data_folder(ratID, 'processed', parent_directory);
 session_folder = fullfile(processed_folder, session_name);
 
 if exist(session_folder, 'dir')
-    ERPs_folder = sprintf('%s_ERPs_%s', session_name, event_name);
+    ERPs_folder = sprintf('%s_ERPs', session_name);
     ERPs_folder = fullfile(session_folder, ERPs_folder);
 else
     ERPs_folder = '';

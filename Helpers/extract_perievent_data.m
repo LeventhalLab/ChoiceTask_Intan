@@ -35,7 +35,7 @@ perievent_data = zeros(n_trials, n_channels, samps_per_window);
 
 for i_trial = 1 : n_trials
 
-    if samp_windows(i_trial, 1) < 1 || samp_windows(i_trial, 2) > total_samples
+    if samp_windows(i_trial, 1) < 1 || samp_windows(i_trial, 2) > total_samples || isnan(center_samps(i_trial))
         % if window starts before start of recording or ends after end of
         % recording, skip
         continue

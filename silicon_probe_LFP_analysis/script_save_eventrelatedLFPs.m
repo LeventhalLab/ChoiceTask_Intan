@@ -1,4 +1,4 @@
-% script to calculate scalograms for all of Jen's rats; store in files in
+% script to store event-triggered LFPs for all of Jen's rats; store in files in
 % the processed data folders
 
 % parent_directory = 'Z:\data\ChoiceTask\';
@@ -98,30 +98,31 @@ for i_rat = 1 : n_rats
             end
             lfp_data = load(lfp_fname);
             Fs = lfp_data.actual_Fs;
-
+            
             if strcmpi(lfp_type, 'bipolar')
                 ordered_lfp = lfp_data.bipolar_lfp;
+                probe_site_mapping = lfp_data.intan2probe_mapping;
             else
-                probe_site_mapping = probe_site_mapping_all_probes(probe_type);
                 ordered_lfp = lfp_data.lfp(probe_site_mapping, :);
+                probe_site_mapping = probe_site_mapping_all_probes(probe_type);
             end
 
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
             n_channels = size(ordered_lfp, 1);
 
+            ERP_folder = create_ERPs_folder(session_name, parent_directory);
             for i_event = 1 : length(event_list)
                 event_name = event_list{i_event};
                 sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
 
                 ERP_name = sprintf('%s_ERPs_%s_%s.mat',session_name, lfp_type, event_name);
-                ERP_folder = create_ERPs_folder(session_name, event_name, parent_directory);
                 ERP_name = fullfile(ERP_folder, ERP_name);
 
                 if exist(ERP_name)
                     continue
                 end
 
-                perievent_data = extract_perievent_data(ordered_lfp, trials, event_name, t_window, Fs);
+                event_triggered_lfps = extract_perievent_data(ordered_lfp, trials, event_name, t_window, Fs);
 
     %             scalo_folder = sprintf('%s_scalos_%s', session_name, event_name);
     %             scalo_folder = fullfile(cur_dir, scalo_folder);
@@ -137,10 +138,10 @@ for i_rat = 1 : n_rats
 
                 if strcmpi(lfp_type, 'monopolar')
                     note = 'monopolar LFPs in site order, NOT original recording order';
-                    save(ERP_name, 'event_related_scalos', 'event_triggered_lfps', 't_window', 'i_channel', 'trials', 'Fs', 'probe_type', 'artifact_timestamps', 'note');
+                    save(ERP_name, 'event_triggered_lfps', 't_window', 'trials', 'Fs', 'probe_type', 'probe_site_mapping', 'artifact_timestamps', 'note');
                 else
                     note = 'bipolar LFPs in site order';
-                    save(ERP_name, 'event_related_scalos', 'event_triggered_lfps', 't_window', 'i_channel', 'trials', 'Fs', 'probe_type', 'intan2probe_mapping', 'note');
+                    save(ERP_name, 'event_triggered_lfps', 't_window', 'trials', 'Fs', 'probe_type', 'probe_site_mapping', 'note');
                 end 
 
                 % for just storing ERPs, I think OK to just store all the channels in one file since no scalograms stored there        
