@@ -70,7 +70,7 @@ for i_rat = 22 : n_rats
         try
             nexData = extractEventsFromIntanSystem(rawdata_ephys_folder);
         catch
-            sprintf('problem generating nexData for %s', session_name)
+            sprintf('there was a problem generating nexData for %s', session_name)
             % some sessions there is a mismatch between digital samples
             % acquired and analog/amplifier signals acquired (generally
             % more on the digital lines). Why is that? Will things like up
