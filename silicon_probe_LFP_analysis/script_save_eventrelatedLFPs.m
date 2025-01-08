@@ -113,14 +113,13 @@ for i_rat = 1 : n_rats
             ERP_folder = create_ERPs_folder(session_name, parent_directory);
             for i_event = 1 : length(event_list)
                 event_name = event_list{i_event};
-                sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
-
                 ERP_name = sprintf('%s_ERPs_%s_%s.mat',session_name, lfp_type, event_name);
                 ERP_name = fullfile(ERP_folder, ERP_name);
 
                 if exist(ERP_name)
                     continue
                 end
+                sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
 
                 event_triggered_lfps = extract_perievent_data(ordered_lfp, trials, event_name, t_window, Fs);
 
