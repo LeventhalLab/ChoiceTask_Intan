@@ -93,7 +93,7 @@ for i_rat = 1 : n_rats
 
             eventrelatedLFPs_saved = check_eventrelatedLFPs(session_name, event_list, lfp_type, probe_type, parent_directory);
             if eventrelatedLFPs_saved
-                sprintf('all event-related LFPs extracted for %s, %s trials', session_name, trials_to_analyze)
+                sprintf('all event-related LFPs extracted for %s, %s trials', session_name)
                 continue
             end
             lfp_data = load(lfp_fname);
