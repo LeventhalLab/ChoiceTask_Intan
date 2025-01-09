@@ -3,7 +3,7 @@
 
 % parent_directory = 'Z:\data\ChoiceTask\';
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
-summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
+summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
 % summary_xls_dir = 'Z:\data\ChoiceTask\Probe Histology Summary';
 summary_xls_dir = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
@@ -41,6 +41,10 @@ for i_rat = 1 : n_rats
     end
 
     probe_type = probe_types{probe_types.ratID == ratID, 2};
+    if isempty(probe_type)
+        % no entry for this rat in the probe type table in the excel file
+        continue
+    end
     probe_site_mapping = probe_site_mapping_all_probes(probe_type);
     processed_folder = find_data_folder(ratID, 'processed', parent_directory);
     session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));
