@@ -1,0 +1,1 @@
+function [bipolar_artifact_mask, bipolar_artifact_timestamps] = find_bipolar_artifact_mask(probe_site_mapping, monopolar_artifact_mask)

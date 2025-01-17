@@ -16,6 +16,7 @@ function [valid_trials, valid_trial_flags] = extract_trials_by_features(trials, 
 
 num_trials = length(trials);
 valid_trial_flags = true(num_trials, 1);
+
 if contains(lower(trialfeatures), 'correct')
     valid_trial_flags = valid_trial_flags & find_trials_by_field(trials, 'correct', true);
 end

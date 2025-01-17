@@ -144,7 +144,7 @@ for i_rat = 1 : n_rats
                     save(ERP_name, 'event_triggered_lfps', 't_window', 'trials', 'Fs', 'probe_type', 'probe_site_mapping', 'artifact_timestamps', 'note');
                 else
                     note = 'bipolar LFPs in site order';
-                    save(ERP_name, 'event_triggered_lfps', 't_window', 'trials', 'Fs', 'probe_type', 'probe_site_mapping', 'note');
+                    save(ERP_name, 'event_triggered_lfps', 't_window', 'trials', 'Fs', 'probe_type', 'probe_site_mapping', 'artifact_timestamps', 'note');
                 end 
 
                 % for just storing ERPs, I think OK to just store all the channels in one file since no scalograms stored there        

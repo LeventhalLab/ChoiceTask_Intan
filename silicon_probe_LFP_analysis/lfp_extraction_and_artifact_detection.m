@@ -88,7 +88,7 @@ for i_rat = 1 : num_rats
             %Run both LFP calculations and artifact detection
             sprintf('working on calculating LFPs and artifact detection for %s', session_name)
             [lfp, actual_Fs] = calculate_monopolar_LFPs_DL(phys_folder, target_Fs, convert_to_microvolts);
-            [~, artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold, min_duration);
+            [artifact_mask, artifact_timestamps] = reject_artifacts(lfp, threshold, min_duration);
             save(full_lfp_name, 'lfp', 'actual_Fs', 'convert_to_microvolts', 'artifact_mask', 'artifact_timestamps');
         end
 
