@@ -48,6 +48,17 @@ for i_trial = 1 : n_trials
         trial_ts = trials(i_trial).timestamps.(event_name);
         
         for mono_ch_idx = 1 : 2
+            if length(trial_ts) > 1
+                % workaround for occasional errors where mutliple
+                % timestamps are identified at the end of a session
+                trial_ts = trial_ts(1);
+            end
+            if isempty(trial_ts)
+                % part of a trial occurred as time was running out, so some
+                % timestamps exist but others do not in the same trial
+                continue
+            end
+
             trial_artifact_diff = abs(monopolar_artifact_ts{mono_ch_idx} - trial_ts);
 
             if any(trial_artifact_diff < t_diff)

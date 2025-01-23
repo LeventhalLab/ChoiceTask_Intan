@@ -27,13 +27,13 @@ for i_trial = 1 : n_trials
             trial_ts = trial_ts(1);
         end
 
-        if isempty(trial_ts) 
-            % workaround for a trial at the end of a session where some
-            % events exist and some are after session finished
-            continue
-        end
+        if length(trial_ts) 
         
-        trial_artifact_diff = abs(artifact_timestamps - trial_ts);
+        try
+            trial_artifact_diff = abs(artifact_timestamps - trial_ts);
+        catch
+            keyboard
+        end
 
         if any(trial_artifact_diff < t_diff)
             trials_with_artifacts(i_trial) = true;

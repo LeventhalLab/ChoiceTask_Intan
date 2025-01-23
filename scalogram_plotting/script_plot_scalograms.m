@@ -4,8 +4,8 @@
 % in this version, the event-related LFPs have all been extracted already
 % and stored in separate .mat files
 
-artifact_t_window = 1.5;   % how far the artifact can be from either side of the relevant event in seconds
-trial_features = {'all', 'correct', 'wrong', 'moveleft', 'moveright'};
+% trial_features = {'all', 'correct', 'wrong', 'moveleft', 'moveright'};
+trial_features = {'all'};
 n_trialfeatures = length(trial_features);
 
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
@@ -107,7 +107,6 @@ for i_rat = 1 : num_rats
                     fprintf('no peri-event LFPs extracted for %s, %s, %s\n', lfp_type, session_name, event_name)
                     continue
                 end
-                sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
 
                 perievent_LFPs = load(ERP_name);
 
@@ -135,6 +134,12 @@ for i_rat = 1 : num_rats
                 if ~exist(scalo_folder, 'dir')
                     mkdir(scalo_folder)
                 end
+
+                if check_all_session_scalos_stored(session_name, lfp_type, event_name, probe_lfp_type, trial_features, scalo_folder)
+                    % already calculated all of these, skip
+                    continue
+                end
+                sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
         
                 for i_channel = 1 : n_channels
                     [shank_num, site_num] = get_shank_and_site_num(probe_lfp_type, i_channel);
@@ -151,6 +156,18 @@ for i_rat = 1 : num_rats
                             monopolar_ERP_name = sprintf('%s_ERPs_%s_%s.mat',session_name, 'monopolar', event_name);
                             monopolar_ERP_name = fullfile(ERP_folder, monopolar_ERP_name);
 
+                            monopolar_ERPs = load(monopolar_ERP_name);
+                            monopolar_artifact_ts = monopolar_ERPs.artifact_timestamps;
+                        end
+                        if strcmpi(lfp_type, 'bipolar')
+                            trials_with_artifacts = identify_bipolar_artifact_trials(perievent_LFPs.trials, ...
+                                 monopolar_artifact_ts, ...
+                                 event_name, ...
+                                 artifact_t_window, ...
+                                 perievent_LFPs.probe_type, ...
+                                 perievent_LFPs.probe_site_mapping, ...
+                                 i_channel);
+                        end
 
                     end 
 
@@ -188,7 +205,8 @@ for i_rat = 1 : num_rats
                         etl_g = gpuArray(event_triggered_lfps);
                         [event_related_scalos, ~, coi] = trial_scalograms(etl_g, fb);
     
-                        save(scalo_name, 'event_related_scalos', 'event_triggered_lfps', 'fb', 'coi', 't_window', 'i_channel');
+                        trials = perievent_LFPs.trials;
+                        save(scalo_name, 'event_related_scalos', 'event_triggered_lfps', 'fb', 'coi', 't_window', 'i_channel', 'target_trials', 'trials');
                         % saving i_channel is a check to make sure that shank
                         % and site are numbered correctly later
 

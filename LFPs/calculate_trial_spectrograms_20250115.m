@@ -5,7 +5,8 @@
 % and stored in separate .mat files
 
 artifact_t_window = 1.5;   % how far the artifact can be from either side of the relevant event in seconds
-trial_features = {'all', 'correct', 'wrong', 'moveleft', 'moveright'};
+% trial_features = {'all', 'correct', 'wrong', 'moveleft', 'moveright'};
+trial_features = {'all'};
 n_trialfeatures = length(trial_features);
 
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
@@ -177,9 +178,9 @@ for i_rat = 1 : num_rats
                         scalo_name = sprintf('%s_scalos_%s_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, trial_feature, event_name, shank_num, site_num);
                         scalo_name = fullfile(scalo_folder, scalo_name);
             
-                        % if exist(scalo_name, 'file')
-                        %     continue
-                        % end
+                        if exist(scalo_name, 'file')
+                            continue
+                        end
 
                         [~, trials_with_feature] = extract_trials_by_features(perievent_LFPs.trials, trial_feature);
 
@@ -205,6 +206,7 @@ for i_rat = 1 : num_rats
                         etl_g = gpuArray(event_triggered_lfps);
                         [event_related_scalos, ~, coi] = trial_scalograms(etl_g, fb);
     
+                        trials = perievent_LFPs.trials;
                         save(scalo_name, 'event_related_scalos', 'event_triggered_lfps', 'fb', 'coi', 't_window', 'i_channel', 'target_trials', 'trials');
                         % saving i_channel is a check to make sure that shank
                         % and site are numbered correctly later
