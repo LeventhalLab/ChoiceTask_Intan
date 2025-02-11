@@ -13,6 +13,8 @@ parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceT
 summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
 summary_xls_dir = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
+qualitycheck_xls = 'channels_qc_final.xlsx';
+qualitycheck_xls = fullfile(summary_xls_dir, qualitycheck_xls);
 
 % change the line below to allow looping through multiple trial types,
 % extract left vs right, etc.
@@ -46,6 +48,8 @@ for i_rat = 1 : num_rats
     processed_folder = find_data_folder(ratID, 'processed', parent_directory);
     session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));
     num_sessions = length(session_dirs);
+
+    session_qc_check = readtable(qualitycheck_xls, sheet=ratID);
 
     for i_session = 1 : num_sessions
 
@@ -144,6 +148,10 @@ for i_rat = 1 : num_rats
         
                 for i_channel = 1 : n_channels
                     [shank_num, site_num] = get_shank_and_site_num(probe_lfp_type, i_channel);
+
+                    % check if this is a good or bad channel all the way
+                    % through the recording
+                    
 
                     if isfield(perievent_LFPs, 'artifact_timestamps')
                         trials_with_artifacts = identify_artifact_trials(perievent_LFPs.trials, ...

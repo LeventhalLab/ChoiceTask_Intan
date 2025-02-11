@@ -70,6 +70,8 @@ for i_rat = 1 : num_rats
 
             % todo: also make plots of mean scalograms for sequence of
             % events
+            % [geometry_amp_fig, geometry_amp_axs] = create_single_event_scalogram_panels(n_rows, n_cols, session_name, lfp_type, trial_feature, event_name);
+            % [geometry_phase_fig, geometry_phase_axs] = create_single_event_scalogram_panels(n_rows, n_cols, session_name, lfp_type, trial_feature, event_name);
             for i_event = 1 : length(event_list)
                 event_name = event_list{i_event};
                 scalo_folder = create_scalo_folder(session_name, event_name, parent_directory);
@@ -104,7 +106,7 @@ for i_rat = 1 : num_rats
                     case 'bipolar'
                         n_rows = sites_per_shank - 1;
                 end
-                [geometry_amp_fig, geometry_amp_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'off');
+                [geometry_amp_fig, geometry_amp_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks);
                 header_string = sprintf('%s lfp power, %s, %s trials, %s', lfp_type, session_name, trial_feature, event_name);
                 power_sgt = sgtitle(geometry_amp_fig, header_string, interpreter='none');
                 [geometry_phase_fig, geometry_phase_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks);
@@ -135,7 +137,7 @@ for i_rat = 1 : num_rats
                         end
                         mean_phases = circ_mean(scalo_phases, [], 1);
 
-                        set(geometry_amp_fig, 'CurrentAxes', geometry_amp_axs(i_site, i_shank))
+                        axes(geometry_amp_axs(i_site, i_shank))
                         imagesc(t, f, log(mean_power), power_clims)
                         set(gca,ydir='normal',...
                                 YLim=power_ylims,...
