@@ -59,47 +59,9 @@ for i_rat = 1 : num_rats
         cur_dir = fullfile(session_dirs(i_session).folder, session_name);
         cd(cur_dir)
 
-        % % load trials structure
-        % trials_name = sprintf('%s_trials.mat', session_name);
-        % trials_name = fullfile(cur_dir, trials_name);
-        % 
-        % if ~exist(trials_name)
-        %     sprintf('no trials structure found for %s', session_name)
-        %     continue
-        % end
-        % 
-        % load(trials_name)
-        % 
-        % selected_trials = extract_trials_by_features(trials, trials_to_analyze);
-        % if isempty(selected_trials)
-        %     sprintf('no %s trials found for %s', trials_to_analyze, session_name)
-        %     continue
-        % end
-        % 
-        % lfp_fname = strcat(session_name, '_lfp.mat');
-        % if ~isfile(lfp_fname)
-        %     sprintf('%s not found, skipping', lfp_fname)
-        %     continue
-        % end
-        % 
-        % lfp_data = load(lfp_fname);
-
-        % Fs = lfp_data.actual_Fs;
-        % samp_window = round(t_window * Fs);
-        % samples_per_event = range(samp_window) + 1;
-        % fb = cwtfilterbank('signallength', samples_per_event, ...
-        %         'samplingfrequency', Fs, ...
-        %         'wavelet','amor',...
-        %         'frequencylimits', [1, 100]);
-
-        % [ordered_lfp, intan_site_order, intan_site_order_for_trials_struct, site_order] = lfp_by_probe_site_ALL(lfp_data, probe_type);
-
         for i_lfptype = 1 : length(lfp_types)
 
             lfp_type = lfp_types{i_lfptype};
-            % if strcmpi(lfp_type, 'bipolar')
-            %     ordered_lfp = diff_lfp_from_monopolar(ordered_lfp, probe_type);
-            % end
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
 
             ERP_folder = create_ERPs_folder(session_name, parent_directory);
@@ -148,10 +110,6 @@ for i_rat = 1 : num_rats
         
                 for i_channel = 1 : n_channels
                     [shank_num, site_num] = get_shank_and_site_num(probe_lfp_type, i_channel);
-
-                    % check if this is a good or bad channel all the way
-                    % through the recording
-                    
 
                     if isfield(perievent_LFPs, 'artifact_timestamps')
                         trials_with_artifacts = identify_artifact_trials(perievent_LFPs.trials, ...

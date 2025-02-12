@@ -70,18 +70,28 @@ for i_rat = 1 : num_rats
 
             % todo: also make plots of mean scalograms for sequence of
             % events
-            % [geometry_amp_fig, geometry_amp_axs] = create_single_event_scalogram_panels(n_rows, n_cols, session_name, lfp_type, trial_feature, event_name);
-            % [geometry_phase_fig, geometry_phase_axs] = create_single_event_scalogram_panels(n_rows, n_cols, session_name, lfp_type, trial_feature, event_name);
             for i_event = 1 : length(event_list)
                 event_name = event_list{i_event};
                 scalo_folder = create_scalo_folder(session_name, event_name, parent_directory);
-
+                
                 if ~exist(scalo_folder, 'dir')
                     continue
+                end
+                scalo_plots_folder = create_scalo_plots_folder(session_name, event_name, parent_directory);
+                if ~exist(scalo_plots_folder, 'dir')
+                    status = mkdir(scalo_plots_folder);
                 end
 
                 sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
                 trial_feature = 'all';
+                scalo_power_fig_name = sprintf('%s_scalopower_%s_%s_%s', session_name, lfp_type, trial_feature, event_name);
+                scalo_power_fig_name = fullfile(scalo_plots_folder, scalo_power_fig_name);
+
+                scalo_mrl_fig_name = sprintf('%s_scalomrl_%s_%s_%s', session_name, lfp_type, trial_feature, event_name);
+                scalo_mrl_fig_name = fullfile(scalo_plots_folder, scalo_power_fig_name);
+                if exist(scalo_power_fig_name, 'file') && exist(scalo_mrl_fig_name)
+                    continue
+                end
 
                 switch lower(probe_type)
                     case 'nn8x8'
@@ -99,6 +109,7 @@ for i_rat = 1 : num_rats
                         cols_per_shank = 2;
                 end
 
+                n_monochannels = sites_per_shank * n_shanks * cols_per_shank;
                 % create figure with appropriate number of panels
                 switch lower(lfp_type)
                     case 'monopolar'
@@ -106,52 +117,70 @@ for i_rat = 1 : num_rats
                     case 'bipolar'
                         n_rows = sites_per_shank - 1;
                 end
-                [geometry_amp_fig, geometry_amp_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks);
+                
+                try
+                    valid_channels = valid_channels_from_qc(session_qc_check, session_name);
+                    % sometimes the valid channels aren't marked for this session in the
+                    % quality check excel spreadsheet
+                catch
+                    valid_channels = 1 : n_monochannels;
+                end
+                [geometry_power_fig, geometry_power_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'off');
                 header_string = sprintf('%s lfp power, %s, %s trials, %s', lfp_type, session_name, trial_feature, event_name);
-                power_sgt = sgtitle(geometry_amp_fig, header_string, interpreter='none');
-                [geometry_phase_fig, geometry_phase_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks);
-                amp_sgt = sgtitle(geometry_amp_fig, header_string, interpreter='none');
+                power_sgt = sgtitle(geometry_power_fig, header_string, interpreter='none');
+                [geometry_mrl_fig, geometry_mrl_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks);
+                header_string = sprintf('%s lfp mrl, %s, %s trials, %s', lfp_type, session_name, trial_feature, event_name);
+                mrl_sgt = sgtitle(geometry_mrl_fig, header_string, interpreter='none');
                 for i_shank = 1 : n_shanks
-                    for i_site = 1 : sites_per_shank
-                        scalo_name = sprintf('%s_scalos_%s_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, trial_feature, event_name, i_shank, i_site);
-                        scalo_name = fullfile(scalo_folder, scalo_name);
-
-                        scalo_data = load(scalo_name);
-                        n_samples = size(scalo_data.event_related_scalos, 3);
-                        t = linspace(scalo_data.t_window(1), scalo_data.t_window(2), n_samples);
-                        f = centerFrequencies(scalo_data.fb);
-
-                        data_without_nans = scalo_data.event_related_scalos(~isnan(scalo_data.event_related_scalos));
-                        scalo_amplitudes = abs(scalo_data.event_related_scalos);
-                        scalo_power = scalo_amplitudes .^ 2;
-                        scalo_phases = angle(data_without_nans);
-
-                        % scalo_data.event_related_scalos contains the
-                        % complex scalograms.
-                        % scalo_data.event_related_scalos(i, j, k) is the
-                        % scalogram for the i'th trial, j'th frequency,
-                        % k'th time sample
-                        mean_power = mean(scalo_power, 1, 'omitnan');
-                        if ndims(mean_power) > 2 %#ok<ISMAT>
-                            mean_power = squeeze(mean_power);
+                    for i_shankcol = 1 : cols_per_shank
+                        for i_site = 1 : sites_per_shank
+    
+                            col_num = (i_shank-1) * cols_per_shank + i_shankcol;
+                            if strcmpi()
+                            original_channel_num = map_shanksite2channel(col_num, i_site, probe_type);
+                            % above is for checking if 
+    
+                            scalo_name = sprintf('%s_scalos_%s_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, trial_feature, event_name, i_shank, i_site);
+                            scalo_name = fullfile(scalo_folder, scalo_name);
+    
+                            scalo_data = load(scalo_name);
+                            n_samples = size(scalo_data.event_related_scalos, 3);
+                            t = linspace(scalo_data.t_window(1), scalo_data.t_window(2), n_samples);
+                            f = centerFrequencies(scalo_data.fb);
+    
+                            data_without_nans = scalo_data.event_related_scalos(~isnan(scalo_data.event_related_scalos));
+                            scalo_amplitudes = abs(scalo_data.event_related_scalos);
+                            scalo_power = scalo_amplitudes .^ 2;
+                            scalo_phases = angle(data_without_nans);
+    
+                            % scalo_data.event_related_scalos contains the
+                            % complex scalograms.
+                            % scalo_data.event_related_scalos(i, j, k) is the
+                            % scalogram for the i'th trial, j'th frequency,
+                            % k'th time sample
+                            mean_power = mean(scalo_power, 1, 'omitnan');
+                            if ndims(mean_power) > 2 %#ok<ISMAT>
+                                mean_power = squeeze(mean_power);
+                            end
+                            mean_phases = circ_mean(scalo_phases, [], 1);
+    
+                            set(geometry_power_fig, 'CurrentAxes', geometry_power_axs(i_site, col_num))
+                            imagesc(t, f, log(mean_power), power_clims)
+                            set(gca,ydir='normal',...
+                                    YLim=power_ylims,...
+                                    YTick=power_yticks);
+                            if i_shank > 1
+                                set(gca,yticklabels=[]);
+                            end
+                            if i_shank < sites_per_shank
+                                set(gca,xticklabels=[]);
+                            end
+    
                         end
-                        mean_phases = circ_mean(scalo_phases, [], 1);
-
-                        axes(geometry_amp_axs(i_site, i_shank))
-                        imagesc(t, f, log(mean_power), power_clims)
-                        set(gca,ydir='normal',...
-                                YLim=power_ylims,...
-                                YTick=power_yticks);
-                        if i_shank > 1
-                            set(gca,yticklabels=[]);
-                        end
-                        if i_shank < sites_per_shank
-                            set(gca,xticklabels=[]);
-                        end
-
                     end
                 end
-
+                print(geometry_power_fig, scalo_power_fig_name, '-dpdf')
+                close(geometry_power_fig)
             end
         end
     end
