@@ -10,7 +10,7 @@ n_trialfeatures = length(trial_features);
 
 power_ylims = [0, 80];
 power_yticks = [0, 20, 40, 60, 80];
-power_yticklabels = [0, [], [], 80];
+power_yticklabels = {0, [], [], [], 80};
 
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
 summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
