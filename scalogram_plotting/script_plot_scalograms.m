@@ -8,9 +8,9 @@
 trial_features = {'all'};
 n_trialfeatures = length(trial_features);
 
-power_clims = [2, 16];
 power_ylims = [0, 80];
-power_yticks = [0, 80];
+power_yticks = [0, 20, 40, 60, 80];
+power_yticklabels = [0, [], [], 80];
 
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
 summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
@@ -26,7 +26,8 @@ lfp_types = {'monopolar', 'bipolar'};
 lfp_type = 'monopolar';
 % trials_to_analyze = 'all';
 
-t_window = [-2.5, 2.5];
+t_window = [-1, 1];
+t_ticks = [t_window(1), 0, t_window(2)];
 event_list = {'cueOn', 'centerIn', 'tone', 'centerOut' 'sideIn', 'sideOut', 'foodClick', 'foodRetrieval'};
 
 probe_type_sheet = 'probe_type';
@@ -63,9 +64,12 @@ for i_rat = 1 : num_rats
         for i_lfptype = 1 : length(lfp_types)
 
             lfp_type = lfp_types{i_lfptype};
-            % if strcmpi(lfp_type, 'bipolar')
-            %     ordered_lfp = diff_lfp_from_monopolar(ordered_lfp, probe_type);
-            % end
+            if strcmpi(lfp_type, 'monopolar')
+                power_clims = [2, 10];
+            else
+                power_clims = [0, 5];
+            end
+
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
 
             % todo: also make plots of mean scalograms for sequence of
@@ -125,11 +129,17 @@ for i_rat = 1 : num_rats
                 catch
                     valid_channels = 1 : n_monochannels;
                 end
-                [geometry_power_fig, geometry_power_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'off');
-                header_string = sprintf('%s lfp power, %s, %s trials, %s', lfp_type, session_name, trial_feature, event_name);
+                test_scalo_name = sprintf('%s_scalos_%s_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, trial_feature, event_name, 1, 1);
+                test_scalo_name = fullfile(scalo_folder, test_scalo_name);
+                trials = load(test_scalo_name, 'trials');
+                trials_with_feature = extract_trials_by_features(trials.trials, trial_feature);
+                n_trials = length(trials_with_feature);
+
+                [geometry_power_fig, geometry_power_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'on');
+                header_string = sprintf('%s lfp power, %s, %s trials, %s, n=%d', lfp_type, session_name, trial_feature, event_name, n_trials);
                 power_sgt = sgtitle(geometry_power_fig, header_string, interpreter='none');
-                [geometry_mrl_fig, geometry_mrl_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks);
-                header_string = sprintf('%s lfp mrl, %s, %s trials, %s', lfp_type, session_name, trial_feature, event_name);
+                [geometry_mrl_fig, geometry_mrl_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'on');
+                header_string = sprintf('%s lfp mrl, %s, %s trials, %s, n=%d', lfp_type, session_name, trial_feature, event_name, n_trials);
                 mrl_sgt = sgtitle(geometry_mrl_fig, header_string, interpreter='none');
                 for i_shank = 1 : n_shanks
                     for i_shankcol = 1 : cols_per_shank
@@ -169,16 +179,36 @@ for i_rat = 1 : num_rats
                             end
                             mean_phases = circ_mean(scalo_phases, [], 1);
     
+                            figure(geometry_power_fig)
                             set(geometry_power_fig, 'CurrentAxes', geometry_power_axs(i_site, col_num))
                             imagesc(t, f, log(mean_power), power_clims)
                             set(gca,ydir='normal',...
                                     YLim=power_ylims,...
-                                    YTick=power_yticks);
-                            if i_shank > 1
+                                    YTick=power_yticks,...
+                                    yticklabels=power_yticklabels,...
+                                    XLim=t_window);
+                            if col_num > 1
                                 set(gca,yticklabels=[]);
                             end
-                            if i_shank < sites_per_shank
-                                set(gca,xticklabels=[]);
+                            if i_site < sites_per_shank
+                                set(gca, XTick=t_ticks, xticklabels=[]);
+                            else
+                                set(gca, XTick=t_ticks, xticklabels=t_ticks)
+                            end
+
+                            if strcmpi(lfp_type, 'monopolar')
+                                if ~valid_channels(original_channel_num)
+                                    % this was an invalid channel, mark it in
+                                    % the plot with a bold border
+                                    set(gca,'linewidth', 3)
+                                end
+                            else
+                                % do the same for bipolar
+                                if ~valid_channels(original_channel_num(1)) || ~valid_channels(original_channel_num(2))
+                                    % one of the channels that went into
+                                    % this bipolar calculation was bad
+                                    set(gca,'linewidth', 3)
+                                end
                             end
     
                         end
