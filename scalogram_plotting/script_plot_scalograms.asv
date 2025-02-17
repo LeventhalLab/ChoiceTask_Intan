@@ -40,7 +40,7 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 
 num_rats = length(ratIDs);
 
-for i_rat = 2 : num_rats
+for i_rat = 1 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
 
@@ -62,7 +62,7 @@ for i_rat = 2 : num_rats
         cd(cur_dir)
 
         for i_lfptype = 1 : length(lfp_types)
-            % lfp_type = 'bipolar';
+            lfp_type = 'bipolar';
             lfp_type = lfp_types{i_lfptype};
             if strcmpi(lfp_type, 'monopolar')
                 power_clims = [2, 10];
@@ -88,10 +88,10 @@ for i_rat = 2 : num_rats
 
                 sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
                 trial_feature = 'all';
-                scalo_power_fig_name = sprintf('%s_scalopower_%s_%s_%s.pdf', session_name, lfp_type, trial_feature, event_name);
+                scalo_power_fig_name = sprintf('%s_scalopower_%s_%s_%s', session_name, lfp_type, trial_feature, event_name);
                 scalo_power_fig_name = fullfile(scalo_plots_folder, scalo_power_fig_name);
 
-                scalo_mrl_fig_name = sprintf('%s_scalomrl_%s_%s_%s.pdf', session_name, lfp_type, trial_feature, event_name);
+                scalo_mrl_fig_name = sprintf('%s_scalomrl_%s_%s_%s', session_name, lfp_type, trial_feature, event_name);
                 scalo_mrl_fig_name = fullfile(scalo_plots_folder, scalo_power_fig_name);
                 if exist(scalo_power_fig_name, 'file')% && exist(scalo_mrl_fig_name, 'file')
                     continue

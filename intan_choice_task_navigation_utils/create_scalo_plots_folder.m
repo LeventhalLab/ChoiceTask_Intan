@@ -8,11 +8,7 @@ processed_graphs_folder = find_data_folder(ratID, 'processed-graphs', parent_dir
 
 session_folder = fullfile(processed_graphs_folder, session_name);
 
-if exist(session_folder, 'dir')
-    scalo_plots_folder = sprintf('%s_scaloplots_%s', session_name, trial_feature);
-    scalo_plots_folder = fullfile(session_folder, scalo_plots_folder);
-else
-    scalo_plots_folder = '';
-end
+scalo_plots_folder = sprintf('%s_scaloplots_%s', session_name, trial_feature);
+scalo_plots_folder = fullfile(session_folder, scalo_plots_folder);
 
 end
