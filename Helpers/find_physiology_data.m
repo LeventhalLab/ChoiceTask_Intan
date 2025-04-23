@@ -32,7 +32,7 @@ for i_dir = 1 : num_subdirs
         % look for an amplifier.dat and info.rhd file
         amp_file = fullfile(cur_path, 'amplifier.dat');
         info_file = fullfile(cur_path, 'info.rhd');
-
+        
         if isfile(amp_file) && isfile(info_file)
             physiology_folder = cur_path;
         end

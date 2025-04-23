@@ -12,7 +12,7 @@ valid_rat_folders = find_processed_folders(intan_choicetask_parent);
 valid_trials_folder = find_trials_struct_folders(intan_choicetask_parent);
 %summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx'; maybe add this similar to
 %the extract_monopolar_lfp_DL script so don't need to update this
-%individually everytime.
+%individually everytime.                 
 %summary_xls_dir = 'X:\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 %summary_xls = fullfile(summary_xls_dir, summary_xls);
 %%
