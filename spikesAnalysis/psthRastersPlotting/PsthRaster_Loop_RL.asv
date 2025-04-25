@@ -198,6 +198,7 @@ for i_rat = 1 : num_rats
                           clusChannel=spikeStruct.clusterChannel(spikeStruct.clusterChannel(:,1) == clusID, 2);
                           clusRegion=channelRegion(channelRegion(:,1)==num2str(clusChannel),2);
                           clusRegion=clusRegion{1};
+                          if clusRegion
                           clusRegion=strrep(clusRegion,'/','-');
                           % meanFiringRate=(numSpks(g)/max(st));
                           % stdMeanFR=std(meanFiringRate/(max(st)/binSize))

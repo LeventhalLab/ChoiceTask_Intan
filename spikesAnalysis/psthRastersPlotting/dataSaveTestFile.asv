@@ -53,7 +53,7 @@ num_rats = length(ratIDs);
 % parameter.Allcorrect=true;
 
 %Input your parameters!!
-
+regionOfinterest={'VM','VL'};
 behaviorA={'correct','cuedleft'};
 behaviorAname='Correct Left';
 behaviorB={'wrong','cuedleft'};
@@ -349,6 +349,8 @@ for i_rat = 1 : num_rats
                          
                          RAT_SESSION_UNITNAME = strcat(sessionName, '_','Unit_',num2str(unique_clusters(g)),'_',clusRegion); %establishing label for output
                          saveas(fig, fullfile(savePath,[RAT_SESSION_UNITNAME, '.png']))
+                         if strcmp(clusRegion,RegionOfInterest)
+                            
                          close(fig);
                     end
                 else

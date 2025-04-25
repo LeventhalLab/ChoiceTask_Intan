@@ -27,7 +27,7 @@ param.plotDetails = 0; % generates a lot of plots,
     % to debug, or to get nice plots for a presentation
 param.plotGlobal = 1; % plot summary of quality metrics 
 param.verbose = 1; % update user on progress
-param.reextractRaw = 0; % re extract raw waveforms or not 
+param.reextractRaw = 1; % re extract raw waveforms or not 
 
 % saving parameters 
 param.saveAsTSV = 1; % additionally save outputs in .tsv file - this is 
@@ -64,7 +64,7 @@ end
 if strcmp(rawFile, "NaN")
     param.extractRaw = 0;
 else
-    param.extractRaw = 0; %whether to extract raw waveforms or not 
+    param.extractRaw = 1; %whether to extract raw waveforms or not 
 end
 param.probeType = 1; % if you are using spikeGLX and your meta file does 
     % not contain information about your probe type for some reason
