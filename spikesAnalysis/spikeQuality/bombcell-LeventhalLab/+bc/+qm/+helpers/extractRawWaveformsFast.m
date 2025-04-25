@@ -165,13 +165,6 @@ if param.extractRaw
         if ~isfolder(savePath)
             mkdir(savePath)
         end
-        %%%Solution for nan vals error? Doesn't work 
-        % nanvals=find(isnan(rawWaveformsPeakChan));
-        % if ~isempty(nanvals)
-        %     rawWaveformsFull(nanvals,:,:)=[];
-        %     rawWaveformsPeakChan(nanvals)=[];
-        % end
-
         writeNPY(rawWaveformsFull, fullfile(savePath, 'templates._bc_rawWaveforms_kilosort_format.npy'))
         writeNPY(rawWaveformsPeakChan, fullfile(savePath, 'templates._bc_rawWaveformPeakChannels_kilosort_format.npy'))
         writeNPY(baselineNoiseAmplitude, fullfile(savePath, 'templates._bc_baselineNoiseAmplitude_kilosort_format.npy'))
@@ -202,30 +195,19 @@ if param.extractRaw
 
     %% estimate signal-to-noise ratio
     unique_clus = unique(spikeClusters);
-    if ~isempty(fullfile(savePath, 'templates._bc_baselineNoiseAmplitude.npy'))
-        average_baseline_cat = readNPY(fullfile(savePath, 'templates._bc_baselineNoiseAmplitude_kilosort_format.npy'));
-        average_baseline_idx_cat = readNPY(fullfile(savePath, 'templates._bc_baselineNoiseAmplitudeIndex_kilosort_format.npy'));
-        %%Solution for raw waveforms error? Doesn't work
-        % nanvals=find(isnan(average_baseline_idx_cat));
-        % if ~isempty(nanvals)
-        %     average_baseline_cat(nanvals)=[];
-        %     average_baseline_idx_cat(nanvals)=[];
-        % end
-        % zerovals=find(average_baseline_idx_cat==0);
-        % if ~isempty(zerovals)
-        %     average_baseline_cat(zerovals)=[];
-        %     average_baseline_idx_cat(zerovals)=[];
-        % end
-        %signal to noise ratio (Enny van Beest)
-        signalToNoiseRatio = cell2mat(arrayfun(@(X) ...
-            max(abs(squeeze(rawWaveformsFull(X, rawWaveformsPeakChan(X), :))))./ ...
-            mad(average_baseline_cat(average_baseline_idx_cat == X)), ...
-            unique_clus, 'Uni', false));
-    else 
-        signalToNoiseRatio = [];
-    end
+
+    average_baseline_cat = readNPY(fullfile(savePath, 'templates._bc_baselineNoiseAmplitude_kilosort_format.npy'));
+    average_baseline_idx_cat = readNPY(fullfile(savePath, 'templates._bc_baselineNoiseAmplitudeIndex_kilosort_format.npy'));
+
+    % signal to noise ratio (Enny van Beest)
+    signalToNoiseRatio = cell2mat(arrayfun(@(X) ...
+        max(abs(squeeze(rawWaveformsFull(X, rawWaveformsPeakChan(X), :))))./ ...
+        mad(average_baseline_cat(average_baseline_idx_cat == X)), ...
+        unique_clus, 'Uni', false));
+
 else
-    signalToNoiseRatio = [];
+    unique_clus = unique(spikeClusters);
+    signalToNoiseRatio = nan(numel(unique_clus), 1);
     rawWaveformsFull = [];
     rawWaveformsPeakChan = [];
 end

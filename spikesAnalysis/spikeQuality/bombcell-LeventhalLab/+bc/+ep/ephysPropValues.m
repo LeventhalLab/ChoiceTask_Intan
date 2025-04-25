@@ -17,29 +17,29 @@ if nargin < 1
     ephysMetaDir = '';
 end
 if nargin < 2
-    rawFile = 'NaN';
+    rawFile = rawFile;
 end
 if nargin < 3
-    ephysKilosortPath = '';
+    ephysKilosortPath = ephysKilosortPath;
 end
 
 if nargin < 4
-    gain_to_uV = NaN;
+    gain_to_uV = 0.195;
 end
 
 paramEP = struct; 
 paramEP.plotDetails = 0;
 paramEP.verbose = 1;
-
+ephysMetaDir = '';
 % recording parameters
-paramEP.ephys_sample_rate = 30000; % samples per second
-paramEP.nChannels = 385; %number of recorded channels (including any sync channels)
+paramEP.ephys_sample_rate = 20000; % samples per second
+paramEP.nChannels = 64; %number of recorded channels (including any sync channels)
     % recorded in the raw data. This is usually 384 or 385 for neuropixels
     % recordings
-paramEP.nSyncChannels = 1;
+paramEP.nSyncChannels = 0;
 if  ~isempty(ephysMetaDir)
     paramEP.ephysMetaFile = [ephysMetaDir.folder, filesep, ephysMetaDir.name];
-    paramEP.gain_to_uV = NaN;
+    paramEP.gain_to_uV = gain_to_uV;
 else
     paramEP.ephysMetaFile = 'NaN';
     paramEP.gain_to_uV = gain_to_uV;
@@ -70,11 +70,11 @@ paramEP.probeType = 1; % if you are using spikeGLX and your meta file does
     % information.  If your spikeGLX meta file contains information about your probe
     % type, or if you are using open ephys, this paramater wil be ignored.
 paramEP.detrendWaveforms = 0;
-paramEP.reextractRaw = 0; % re extract raw waveforms or not 
-paramEP.nChannels = 385;
+paramEP.reextractRaw = 1; % re extract raw waveforms or not 
+paramEP.nChannels = 64;
 
 % ephys properties
-paramEP.ephys_sample_rate = 30000;
+paramEP.ephys_sample_rate = 20000;
 
 % ACG 
 paramEP.ACGbinSize = 0.001;
@@ -87,7 +87,7 @@ paramEP.longISI = 2;
 paramEP.minThreshDetectPeaksTroughs = 0.2; % this is multiplied by the max value 
     % in a units waveform to give the minimum prominence to detect peaks using
     % matlab's findpeaks function.
-paramEP.maxWvBaselineFraction = 0.3; % maximum absolute value in waveform baseline
+paramEP.maxWvBaselineFraction = 1; % maximum absolute value in waveform baseline
     % should not exceed this fraction of the waveform's abolute peak value
 paramEP.normalizeSpDecay = 1;
 paramEP.spDecayLinFit = 1;

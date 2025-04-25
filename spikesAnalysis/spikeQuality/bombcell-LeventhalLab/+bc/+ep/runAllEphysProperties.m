@@ -1,12 +1,13 @@
 
-function [ephysProperties, unitClassif] = runAllEphysProperties(ephysPath, savePath, rerunEP, region)
+function [ephysProperties, unitClassif] = runAllEphysProperties(ephysPath, ephysRawFile,savePath, gain_to_uV, rerunEP, region)
 
 
 %% compute ephys properties 
 ephysPropertiesExist = dir(fullfile(savePath, 'templates._bc_ephysProperties.parquet'));
+ephysMetaDir='NaN';
 
 if isempty(ephysPropertiesExist) || rerunEP
-    paramEP = bc.ep.ephysPropValues;
+    paramEP = bc.ep.ephysPropValues(ephysMetaDir, ephysRawFile, ephysPath, gain_to_uV);
     [spikeTimes_samples, spikeTemplates, templateWaveforms, templateAmplitudes, ...
     pcFeatures, ~, channelPositions] = bc.load.loadEphysData(ephysPath, savePath);
     ephysProperties = bc.ep.computeAllEphysProperties(spikeTimes_samples, spikeTemplates, templateWaveforms,...

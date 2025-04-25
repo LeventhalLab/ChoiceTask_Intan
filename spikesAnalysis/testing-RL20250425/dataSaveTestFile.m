@@ -47,7 +47,7 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 %[rat_nums, ratIDs, ratIDs_goodhisto] = get_rat_list();
 ratIDs=probe_types.ratID;
 ignoreRats={'R0326','R0327','R0372','R0374','R0379','R0376','R0378','R0394','R0395','R0396','R0411','R0412','R0413','R0419',...
-            'R0425','R0427','R0456','R0459'};%,'R0420','R0460','R0463','R0466','R0465','R0467','R0479','R0492','R0493'};
+            'R0425','R0427','R0456','R0459','R0420'};%,,'R0460','R0463','R0466','R0465','R0467','R0479','R0492','R0493'};
 num_rats = length(ratIDs);
 % parameter=[];
 % parameter.Allcorrect=true;
@@ -195,6 +195,7 @@ for i_rat = 1 : num_rats
                     for g = 1:size(cluster_spikes, 1)
                           clusID=unique_clusters(g);
                           %Correlate Cluster to Anatomical region
+                          loadUnitData(ephysKilosortPath,clusID)
                           clusChannel=spikeStruct.clusterChannel(spikeStruct.clusterChannel(:,1) == clusID, 2);
                           clusRegion=channelRegion(channelRegion(:,1)==num2str(clusChannel),2);
                           clusRegion=clusRegion{1};
@@ -349,7 +350,7 @@ for i_rat = 1 : num_rats
                          
                          RAT_SESSION_UNITNAME = strcat(sessionName, '_','Unit_',num2str(unique_clusters(g)),'_',clusRegion); %establishing label for output
                          saveas(fig, fullfile(savePath,[RAT_SESSION_UNITNAME, '.png']))
-                         if strcmp(clusRegion,RegionOfInterest)
+                         %if strcmp(clusRegion,RegionOfInterest)
                             
                          close(fig);
                     end
