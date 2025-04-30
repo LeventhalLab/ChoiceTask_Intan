@@ -53,7 +53,13 @@ num_rats = length(ratIDs);
 % parameter.Allcorrect=true;
 
 %Input your parameters!!
-
+acgBinSize=0.0001;
+acgDuration=50; %size of acg in ms
+plotACG=true;
+kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertVersion=4. Otherwise it does not matter. 
+gain_to_uV = 0.195;
+binSize=0.02; %Psth
+outputTitle='Correct Left vs Wrong Left';
 behaviorA={'correct','cuedleft'};
 behaviorAname='Correct Left';
 behaviorB={'wrong','cuedleft'};
@@ -65,7 +71,7 @@ allFeatures={behaviorA,behaviorB,behaviorC};
 allNames={behaviorAname,behaviorBname,behaviorCname};
 trialfeatureList={};
 trialName={};
-binSize=0.02;
+
 for i = 1:length(allFeatures)
     if ~isempty(allFeatures{i})
         trialfeatureList{end+1} = allFeatures{i};
@@ -73,9 +79,11 @@ for i = 1:length(allFeatures)
     end
 end
 
-outputTitle='Correct Left vs Wrong Left';
+
 potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
-% parameter.trialfeatures='Correct Trials All';
+
+%% Loop through all rats and locate any ephys sessions with Kilosort data
+
 for i_rat = 1 : num_rats
     ratID = ratIDs{i_rat};
     
@@ -87,6 +95,7 @@ for i_rat = 1 : num_rats
         continue;
     end
     ratHisto=strcat(ratID,'_','finished');
+    ratTreatment=probe_types.Treatment{i_rat};
     histo_data = readtable(summary_xls,'filetype','spreadsheet',...
             'sheet',ratHisto,...
             'texttype','string');
@@ -136,8 +145,7 @@ for i_rat = 1 : num_rats
         ephysRawFile = fullfile(phys_folder, 'amplifier.dat'); % path to your raw .bin or .dat data
         ephysMetaDir = ''; % path to your .meta or .oebin meta file
         
-        kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertVersion=4. Otherwise it does not matter. 
-        gain_to_uV = 0.195;
+    
 
         %If there is missing behavior inputs continue
         if ~exist(fullfile(phys_folder,'info.rhd'))||~exist(fullfile(phys_folder,'digitalin.dat'))||~exist(fullfile(phys_folder,'analogin.dat'))...
@@ -173,7 +181,7 @@ for i_rat = 1 : num_rats
                 % end
                 %load in ephys data, for now going to exclude all non-soma, MUA, and noise units.
                 %see loadKSdir_RL params.exclude* for altering this param
-                [spikeStruct, clu, st, unique_clusters, numSpks, cluster_spikes] = import_ephys_data_RL(ephysKilosortPath);
+                [spikeStruct, clu, st, unique_clusters, numSpks, cluster_spikes,rawEphysData] = import_ephys_data_RL(ephysKilosortPath);
       
                 %Loop through unique clusters and create psths and rasters of events   
                 if ~isempty(cluster_spikes)
@@ -199,12 +207,21 @@ for i_rat = 1 : num_rats
                           clusRegion=channelRegion(channelRegion(:,1)==num2str(clusChannel),2);
                           clusRegion=clusRegion{1};
                           clusRegion=strrep(clusRegion,'/','-');
-                          % meanFiringRate=(numSpks(g)/max(st));
-                          % stdMeanFR=std(meanFiringRate/(max(st)/binSize))
-                          fig=figure('Visible','on');
-                          set(fig, 'Units', 'Inches', 'Position', [1, 1, 11, 8.5]); % Set figure size
                           
-                          %Set parameters for tiled layout
+                          
+                         %% Calculate fundamental properties of unit
+                         [meanFR,stdMeanFR]=preCueOnData(cluster_spikes(g,:)',trials,'cueOn',binSize);
+                         meanFR=round(meanFR,1);
+                         stdMeanFR=round(stdMeanFR,1);
+                         unitACG=rawEphysData.acgTable(g,:);
+                         unitQmetrics=rawEphysData.qMetrics(g,:);
+                         unitSNR=round(unitQmetrics.signalToNoiseRatio,0);
+                         unitRPV=unitQmetrics.fractionRPVs_estimatedTauR;
+                         percentRPV=round((unitRPV*100),1);
+                         unitAmplitude=round(unitQmetrics.rawAmplitude,0);
+                         rawUnitWaveformsPath=rawEphysData.rawWaveformsPath;
+                         
+                         %% Set parameters for tiled layout
                           numRows = 2*length(trialfeatureList);
                           maxNcols=-inf;
                           for c=1:length(trialfeatureList)
@@ -222,18 +239,26 @@ for i_rat = 1 : num_rats
                               maxNcols=max(maxNcols,nCols);
                               numCols=maxNcols;
                          end
+                         if plotACG
+                            numRows = 2*length(trialfeatureList)+1;
+                         else
+                            numRows=2*length(trialfeatureList);
+                         end
                          
-                         %Create Tiled Layout
+                         %% Create Tiled Layout
+                         fig=figure('Visible','on');
+                         set(fig, 'Units', 'Inches', 'Position', [1, 1, 11, 8.5]); % Set figure size
+                          
                          t = tiledlayout(numRows, numCols, 'TileSpacing', 'Tight', 'Padding', 'None');
                          sessionName = strrep(sessionName, '_', ' ');
                          
                          %Calculate mean firing rate and standard deviation of mean FR of single unit based on 
                          % the two second window before all cue on events during the session                      
-                         [meanFR,stdMeanFR]=preCueOnData(cluster_spikes(g,:)',trials,'cueOn',binSize);
                          
                          %Figure title with pertinent info
                          sgtitle([sessionName, ' ', outputTitle, ' ',' Unit ', num2str(unique_clusters(g)),' ', '\bf', 'Region: ', clusRegion,...
-                             '\rm',' Base FR(+/-) ', num2str(meanFR), '+/-', num2str(stdMeanFR), ' Hz']); 
+                             '\rm',' FR(+/-)= ', num2str(meanFR), '+/-', num2str(stdMeanFR), ' Hz',' Amp= ', num2str(unitAmplitude), 'uV ', ...
+                             ' SNR= ', num2str(unitSNR)]); 
                          subtitle(t, 'Z-score significance: Blue = z>3 | Orange = z<-3');
                          for i=1:length(trialfeatureList)
                                 trialfeatures=trialfeatureList{i};
@@ -256,10 +281,7 @@ for i_rat = 1 : num_rats
                                
                                 eventNames=valid_eventNames;
                                 eventNames = eventNames(~strcmp(eventNames, 'foodClick'));
-                                behaviorTitle=trialName{i};
-                            
-                                
-                                
+                                behaviorTitle=trialName{i};                          
                                 min_psth = Inf;
                                 max_psth = -Inf;
 
@@ -301,7 +323,7 @@ for i_rat = 1 : num_rats
                                     sigBinCentersDecrease = bins(sigBinsDecrease);
                                     plot(bins,psthHz);
                                     hold on;
-                                    plot(bins, zscoredHz, 'm', 'LineWidth', 1.2);
+                                    %plot(bins, zscoredHz, 'm', 'LineWidth', 1.2);
                                     % Mark significant bins (z >/< 3) with
                                     
                                     for b = 1:length(sigBinCentersIncrease)
@@ -343,6 +365,28 @@ for i_rat = 1 : num_rats
                     
     
                                 end
+                                if plotACG
+                                    nexttile(t, [1 round(numCols/2,0)]); % Span 1 row and half columns
+        
+                                    lags = -floor(size(unitACG{1,:},2)/2) : floor(size(unitACG{1,:},2)/2); % Full lag range
+                                    acgCounts = unitACG{1,:}; % Extract the ACG data
+        
+                                    % Now subset the lags and ACG to only the desired window
+                                    windowSizeMs = acgDuration/2; % Half window size (±50 ms)
+        
+                                    % Find indices where lag is between -50 and +50
+                                    idxWindow = lags >= -windowSizeMs & lags <= windowSizeMs;
+        
+                                    lagsSubset = lags(idxWindow);
+                                    acgCountsSubset = acgCounts(idxWindow);
+        
+                                    % Plot the subset
+                                    bar(lagsSubset, acgCountsSubset, 1); % Full-width bars
+                                    xlabel('Lag (ms)');
+                                    ylabel('ACG Count');
+                                    title(['Autocorrelogram ',' RPV=', num2str(percentRPV), '%']);
+                                    xlim([-windowSizeMs windowSizeMs]); % Set x-limits to ±50 ms
+                                 end
                                     
                                     %saveas(gcf, fullfile(savePath,[RAT_SESSION_UNITNAME, '.png']))
                          end

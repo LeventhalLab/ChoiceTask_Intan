@@ -277,37 +277,37 @@ for i_rat = 1 : num_rats
                          %%%
 
                          %% Set parameters for tiled layout
-                         % maxNcols=-inf;
-                         %  for c=1:length(trialfeatureList)
-                         %      behName=trialfeatureList{c};
-                         %      if isempty(behName)
-                         %          continue
-                         %      end
-                         %      if any(strcmp(behName,'correct')|strcmp(behName,'moveright')|strcmp(behName,'moveleft'))
-                         %          nCols=7;
-                         %      elseif any(strcmp(behName,'slowmovement')|strcmp(behName,'slowreaction'))
-                         %          nCols=5;
-                         %      else
-                         %          nCols=4;
-                         %      end
-                         %      maxNcols=max(maxNcols,nCols);
-                         %      numCols=maxNcols;
-                         % end
-                         % if plotACG
-                         %    numRows = 2*length(trialfeatureList)+1;
-                         % else
-                         %    numRows=2*length(trialfeatureList);
-                         % end
+                         maxNcols=-inf;
+                          for c=1:length(trialfeatureList)
+                              behName=trialfeatureList{c};
+                              if isempty(behName)
+                                  continue
+                              end
+                              if any(strcmp(behName,'correct')|strcmp(behName,'moveright')|strcmp(behName,'moveleft'))
+                                  nCols=7;
+                              elseif any(strcmp(behName,'slowmovement')|strcmp(behName,'slowreaction'))
+                                  nCols=5;
+                              else
+                                  nCols=4;
+                              end
+                              maxNcols=max(maxNcols,nCols);
+                              numCols=maxNcols;
+                         end
+                         if plotACG
+                            numRows = 2*length(trialfeatureList)+1;
+                         else
+                            numRows=2*length(trialfeatureList);
+                         end
                          %% Create Tiled Layout
-                         % fig=figure('Visible','on');
-                         % set(fig, 'Units', 'Inches', 'Position', [1, 1, 11, 8.5]); % Set figure size
-                         % t = tiledlayout(numRows, numCols, 'TileSpacing', 'Tight', 'Padding', 'None');
-                         % sessionName = strrep(sessionName, '_', ' ');               
-                         % % Figure title with pertinent info
-                         % sgtitle([sessionName, ' ', outputTitle, ' ',' Unit ', num2str(unique_clusters(g)),' ', '\bf', 'Region: ', clusRegion,...
-                         %     '\rm',' FR(+/-)= ', num2str(meanFR), '+/-', num2str(stdMeanFR), ' Hz',' Amp= ', num2str(unitAmplitude), 'uV ', ...
-                         %     ' SNR= ', num2str(unitSNR)]); 
-                         % subtitle(t, 'Z-score significance: Blue = z>3 | Orange = z<-3');
+                         fig=figure('Visible','on');
+                         set(fig, 'Units', 'Inches', 'Position', [1, 1, 11, 8.5]); % Set figure size
+                         t = tiledlayout(numRows, numCols, 'TileSpacing', 'Tight', 'Padding', 'None');
+                         sessionName = strrep(sessionName, '_', ' ');               
+                         % Figure title with pertinent info
+                         sgtitle([sessionName, ' ', outputTitle, ' ',' Unit ', num2str(unique_clusters(g)),' ', '\bf', 'Region: ', clusRegion,...
+                             '\rm',' FR(+/-)= ', num2str(meanFR), '+/-', num2str(stdMeanFR), ' Hz',' Amp= ', num2str(unitAmplitude), 'uV ', ...
+                             ' SNR= ', num2str(unitSNR)]); 
+                         subtitle(t, 'Z-score significance: Blue = z>3 | Orange = z<-3');
                          
                          for i=1:length(trialfeatureList)
                                 trialfeatures=trialfeatureList{i};
@@ -378,38 +378,38 @@ for i_rat = 1 : num_rats
                                     zscoredHz=(psthHz-meanFR) ./ stdMeanFR;
                                     
                                     %Plot PSTH
-                                    % rowOffset = (i-1)*2;  % Each behavior takes up 2 rows (PSTH + raster)
-                                    % nexttile(rowOffset*numCols + e);
-                                    % sigBinsIncrease = zscoredHz > 3;
-                                    % sigBinCentersIncrease = bins(sigBinsIncrease);
-                                    % sigBinsDecrease = zscoredHz < -3;
-                                    % sigBinCentersDecrease = bins(sigBinsDecrease);
-                                    % plot(bins,psthHz);
-                                    % hold on;
-                                    % 
-                                    % % Mark significant bins (z >/< 3) with
-                                    % 
-                                    % for b = 1:length(sigBinCentersIncrease)
-                                    %     % Draw a short blue vertical bar near the top of the plot if bin is significantly increased 
-                                    %     line([sigBinCentersIncrease(b) sigBinCentersIncrease(b)], [max_psth+1 max_psth+3], 'Color', 'b', 'LineWidth', 1);
-                                    % end
-                                    % for b = 1:length(sigBinCentersDecrease)
-                                    %     % Draw a short orange vertical bar near the top of the plot if bin is significantly decreased 
-                                    %     line([sigBinCentersDecrease(b) sigBinCentersDecrease(b)], [max_psth+1 max_psth+3], 'Color', [1, 0.5, 0], 'LineWidth', 1);
-                                    % end
-                                    % xlim([-1 1]);
-                                    % ylim([(min_psth-5) (max_psth+5)]);
-                                    % 
-                                    % if e==1
-                                    %     ylabel('Hz');
-                                    %     title(strcat(behaviorTitle,'--',eventName));
-                                    % else
-                                    %     yticks([]);
-                                    %     title(strrep(eventName, '_', ' '));
-                                    % end
-                                    % xticks([]);                             
-                                    % median_x = median(bins);
-                                    % xline(median_x, 'r--', 'LineWidth', 0.5);
+                                    rowOffset = (i-1)*2;  % Each behavior takes up 2 rows (PSTH + raster)
+                                    nexttile(rowOffset*numCols + e);
+                                    sigBinsIncrease = zscoredHz > 3;
+                                    sigBinCentersIncrease = bins(sigBinsIncrease);
+                                    sigBinsDecrease = zscoredHz < -3;
+                                    sigBinCentersDecrease = bins(sigBinsDecrease);
+                                    plot(bins,psthHz);
+                                    hold on;
+                                    
+                                    % Mark significant bins (z >/< 3) with
+                                    
+                                    for b = 1:length(sigBinCentersIncrease)
+                                        % Draw a short blue vertical bar near the top of the plot if bin is significantly increased 
+                                        line([sigBinCentersIncrease(b) sigBinCentersIncrease(b)], [max_psth+1 max_psth+3], 'Color', 'b', 'LineWidth', 1);
+                                    end
+                                    for b = 1:length(sigBinCentersDecrease)
+                                        % Draw a short orange vertical bar near the top of the plot if bin is significantly decreased 
+                                        line([sigBinCentersDecrease(b) sigBinCentersDecrease(b)], [max_psth+1 max_psth+3], 'Color', [1, 0.5, 0], 'LineWidth', 1);
+                                    end
+                                    xlim([-1 1]);
+                                    ylim([(min_psth-5) (max_psth+5)]);
+                                    
+                                    if e==1
+                                        ylabel('Hz');
+                                        title(strcat(behaviorTitle,'--',eventName));
+                                    else
+                                        yticks([]);
+                                        title(strrep(eventName, '_', ' '));
+                                    end
+                                    xticks([]);                             
+                                    median_x = median(bins);
+                                    xline(median_x, 'r--', 'LineWidth', 0.5);
                                     
                                     %plot raster stacked below PSTH
                                     % nexttile((rowOffset+1)*numCols + e);
@@ -485,7 +485,6 @@ for i_rat = 1 : num_rats
                             
                          % close(fig);
                          save(regionFile,'regionUnits','-v7.3','-mat')
-                         fprintf('Unit behavioral properties calculated and saved for %s\n',unitID)
                     end
                 else
                     fprintf('No good units found in the given session, consider reprocessing or inspect data. For now continuing %s\n',sessionName)
@@ -493,7 +492,7 @@ for i_rat = 1 : num_rats
         end
     end
 end
-
+save()
 elapsedTime = toc;
 mins = floor(elapsedTime / 60);
 secs = mod(elapsedTime, 60);

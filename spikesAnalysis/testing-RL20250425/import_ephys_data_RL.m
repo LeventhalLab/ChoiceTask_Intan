@@ -1,4 +1,4 @@
-function [spikeStruct, clu, st, unique_clusters, numSpks, cluster_spikes] = import_ephys_data_RL(ephysKilosortPath)
+function [spikeStruct, clu, st, unique_clusters, numSpks, cluster_spikes,rawEphysData] = import_ephys_data_RL(ephysKilosortPath)
 %function to pull all kilosort and intan data into matlab, generate spike
 %structure, and pull desired timestamps based off selected event
 % Inputs: 
@@ -22,13 +22,16 @@ spikeStruct = loadKSdir_RL(ephysKilosortPath);
 % templateWaveforms=spikeStruct.temps;
 % 
 % spikeStruct = RemoveNoiseAmplitudeBased(spikeStruct);
+
 if ~isempty(spikeStruct)
     clu = spikeStruct.clu;
     st = spikeStruct.st;
     
     %Generate matrix with N rows for each unit's spike timestamps
     [unique_clusters, numSpks, cluster_spikes] = unit_spike_activity(clu, st);
-
+    
+    %Load in additional metric/raw waveform information from bombcell
+    rawEphysData = loadUnitData(ephysKilosortPath,unique_clusters);
 
 else 
     ksDir = [];
@@ -40,4 +43,5 @@ else
     valid_trials = [];
     valid_trial_flags = [];
     ts = [];
+    rawEphysData=[];
 end

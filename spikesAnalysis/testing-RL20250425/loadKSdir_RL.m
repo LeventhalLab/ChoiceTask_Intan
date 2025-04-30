@@ -151,9 +151,10 @@ cluster_ids=unique(clu);
 
 
 %Get the channel for the cluster ID
-maxChannels = bc.qm.helpers.getWaveformMaxChannel(templateWaveforms);
+maxChannels= bc.qm.helpers.getWaveformMaxChannel(templateWaveforms);
 %Needs to be referenced back to actual channel ids
 maxChannels=channelMap(maxChannels);
+%templateWaveformsMapped=templateWaveforms(:,:,channelMap);
 
 if ~isempty(cgsFile)
 
@@ -237,6 +238,14 @@ else
     cids = unique(spikeTemplates);
     cgs = 3*ones(size(cids));
 end
+good_ids = unique(clu);
+
+% Step 2: Identify which cluster IDs are missing (bad/unused ones)
+[~, isGood] = ismember(cluster_ids, good_ids); % Returns 0 if not found
+bad_row_indices = find(isGood == 0); % These are rows in templateWaveforms to remove
+
+% Step 3: Safely remove them
+templateWaveforms(bad_row_indices,:,:) = [];
 clusterChannel = clusterChannel(ismember(clusterChannel(:,1), cids), :);   
 % Only take needed data
 spikeTemplates = spikeTemplates(ismember(datas,datasetidx));
@@ -250,6 +259,7 @@ datas = datas(ismember(datas,datasetidx));
 % end
 % 
 
+
 %Create spikeStruct with all necessary information
 
 spikeStruct.st = st;
@@ -259,6 +269,7 @@ spikeStruct.clu = clu;
 spikeStruct.tempScalingAmps = tempScalingAmps;
 spikeStruct.cgs = cgs;
 spikeStruct.cids = cids;
+spikeStruct.allClusIDs=cluster_ids;
 spikeStruct.xcoords = xcoords;
 spikeStruct.ycoords = ycoords;
 spikeStruct.temps = temps;
@@ -267,6 +278,7 @@ spikeStruct.pcFeat = pcFeat;
 spikeStruct.pcFeatInd = pcFeatInd;
 spikeStruct.dataset = datas;
 spikeStruct.templateWaveforms=templateWaveforms;
+
 %spikeStruct.channelMap=channelMap;
 % spikeStruct.maxChannels=maxChannels;
 % spikeStruct.clusterMaxChannel=clusterChannel;

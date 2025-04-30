@@ -4,7 +4,7 @@ function rawEphysData=loadUnitData(ephysKilosortPath,unique_clusters)
 qMetricsPath=fullfile(ephysKilosortPath,'qMetrics');
 unitWaveformsPath=fullfile(qMetricsPath,'RawWaveforms');
 qMetricsTable=parquetread(fullfile(qMetricsPath,'templates._bc_qMetrics.parquet'));
-%refractPeriodTable=parquetread(fullfile(qMetricsPath,'templates._bc_fractionRefractoryPeriodViolationsPerTauR.parquet'));
+refractPeriodTable=parquetread(fullfile(qMetricsPath,'templates._bc_fractionRefractoryPeriodViolationsPerTauR.parquet'));
 ephysPropTable=parquetread(fullfile(qMetricsPath,'_bc_parameters._bc_ephysProperties.parquet'));
 acgTable=parquetread(fullfile(qMetricsPath,'templates._bc_acg.parquet'));
 
@@ -22,7 +22,5 @@ end
 acgTable = acgTable(keepRows, :);
 rawEphysData={};
 rawEphysData.rawWaveformsPath=unitWaveformsPath;
-rawEphysData.acgTable=acgTable;
-rawEphysData.qMetrics=qMetricsTable;
 %SrawEphysData.qmetrics=
 end
