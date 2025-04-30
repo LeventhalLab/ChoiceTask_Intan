@@ -290,9 +290,8 @@ for i_rat = 1 : num_rats
                              regionUnits.(unitID).unitMetrics.clusterSpikes=cluster_spikes(g,:);
                              regionUnits.(unitID).unitMetrics.rawUnitWaveformsPath=rawUnitWaveformsPath;
                              regionUnits.(unitID).unitMetrics.ephysProperties=unitEphysProperties;
-                         end
-                         if ~isfield(regregionUnits.(unitID).unitMetrics,'ephysProperties')
-                            regionUnits.(unitID).unitMetrics.ephysProperties=unitEphysProperties;
+                         else ~isfield(regregionUnits.(unitID).unitMetrics,'ephysProperties'))
+
                          end
                          %%%
 
