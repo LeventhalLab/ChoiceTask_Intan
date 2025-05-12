@@ -1,4 +1,4 @@
-function [param, qMetric, fractionRPVs_allTauR] = loadSavedMetrics(savePath, saveTSV)
+function [param, qMetric, fractionRPVs_allTauR] = loadSavedMetrics(savePath)
 % JF, Load saved quality metrics
 % ------
 % Inputs
