@@ -40,7 +40,7 @@ parent_directory = 'X:\Neuro-Leventhal\data\ChoiceTask';
 summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
 summary_xls_dir = 'X:\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
-sessions_to_ignore = {'R0378_20210507a', 'R0326_20191107a', 'R0425_20220728a', 'R0425_20220816b', 'R0427_20220920a','R0427_20220919a','R0479_20230601a','R0572_20240918a' }; % R0425_20220728a debugging because the intan side was left on for 15 hours;
+sessions_to_ignore = {'R0378_20210507a', 'R0326_20191107a', 'R0425_20220728a', 'R0425_20220816b', 'R0427_20220920a','R0427_20220919a','R0479_20230601a','R0493_20230720a'}; % R0425_20220728a debugging because the intan side was left on for 15 hours;
 
 probe_type_sheet = 'probe_type';
 probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
@@ -50,7 +50,7 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 %[rat_nums, ratIDs, ratIDs_goodhisto] = get_rat_list();
 ratIDs=probe_types.ratID;
 ignoreRats={'R0326','R0327','R0372','R0374','R0379','R0376','R0378','R0394','R0395','R0396','R0411','R0412','R0413','R0419',...
-            'R0425','R0427','R0456','R0459'};%,'R0420','R0460','R0463','R0466','R0465','R0467','R0479','R0492','R0493'};
+            'R0425','R0427','R0456','R0459','R0420','R0460','R0463','R0466','R0465','R0467','R0492','R0494','R0495','R0493','R0479'};
 num_rats = length(ratIDs);
 
 
@@ -63,7 +63,7 @@ kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertV
 gain_to_uV = 0.195;
 binSize=0.02; %Psth
 
-regionOfinterest={'VM','VL','VM-AM'};
+regionOfinterest={'VM','VL'};
 behaviorA={'correct','cuedleft'};
 behaviorAname='Correct Left';
 behaviorB={'wrong','cuedleft'};
@@ -117,8 +117,8 @@ for i_rat = 1 : num_rats
             'texttype','string');
     channelRegion=[histo_data.Intan_Site_Number,histo_data.Region];
     channelRegion(:, 1) = cellfun(@(x) num2str(str2double(x)), channelRegion(:, 1), 'UniformOutput', false); %changed back to zero scale 4/15
-    strrep(regionOfinterest,'/','-')%Matlab doesnt like slashes
-    strrep(channelRegion,'/','-')
+    regionOfinterest=strrep(regionOfinterest,'/','-');%Matlab doesnt like slashes
+    channelRegion=strrep(channelRegion,'/','-');
     if ~any(ismember(regionOfinterest,channelRegion(:,2)))
         fprintf('No electrodes from this rat contain a region of interest skipping... %s\n',ratID)
         continue
@@ -290,8 +290,9 @@ for i_rat = 1 : num_rats
                              regionUnits.(unitID).unitMetrics.clusterSpikes=cluster_spikes(g,:);
                              regionUnits.(unitID).unitMetrics.rawUnitWaveformsPath=rawUnitWaveformsPath;
                              regionUnits.(unitID).unitMetrics.ephysProperties=unitEphysProperties;
-                         else ~isfield(regregionUnits.(unitID).unitMetrics,'ephysProperties'))
-
+                         end
+                         if ~isfield(regionUnits.(unitID).unitMetrics,'ephysProperties')
+                            regionUnits.(unitID).unitMetrics.ephysProperties=unitEphysProperties;
                          end
                          %%%
 
@@ -327,15 +328,15 @@ for i_rat = 1 : num_rats
                          %     '\rm',' FR(+/-)= ', num2str(meanFR), '+/-', num2str(stdMeanFR), ' Hz',' Amp= ', num2str(unitAmplitude), 'uV ', ...
                          %     ' SNR= ', num2str(unitSNR)]); 
                          % subtitle(t, 'Z-score significance: Blue = z>3 | Orange = z<-3');
-                         
+                         if ~isfield(regionUnits.(unitID), 'behavioralFeatures')
+                                    regionUnits.(unitID).behavioralFeatures=struct();
+                         end
                          for i=1:length(trialfeatureList)
                                 trialfeatures=trialfeatureList{i};
                                 featureName=strjoin(trialfeatures,'_');
-                                if ~isfield(regionUnits.(unitID), 'behavioralFeatures')
-                                    regionUnits.(unitID).behavioralFeatures=struct();
-                                end
+                               
                                 if ~isfield(regionUnits.(unitID).behavioralFeatures, featureName)
-                                    regionUnits.(unitID).behavioralFeatures.(featureName)=struct;
+                                    regionUnits.(unitID).behavioralFeatures.(featureName)=struct();
                                 end
                                 if isempty(trialfeatures)
                                     continue
@@ -476,24 +477,24 @@ for i_rat = 1 : num_rats
                              % if plotACG
                              %    nexttile(t, [1 round(numCols/2,0)]); % Span 1 row and half columns
                              % 
-                             %    lags = -floor(size(unitACG{1,:},2)/2) : floor(size(unitACG{1,:},2)/2); % Full lag range
-                             %    acgCounts = unitACG{1,:}; % Extract the ACG data
-                             % 
-                             %    % Now subset the lags and ACG to only the desired window
-                             %    windowSizeMs = 50; % Half window size (±50 ms)
-                             % 
-                             %    % Find indices where lag is between -50 and +50
-                             %    idxWindow = lags >= -windowSizeMs & lags <= windowSizeMs;
-                             % 
-                             %    lagsSubset = lags(idxWindow);
-                             %    acgCountsSubset = acgCounts(idxWindow);
-                             % 
-                             %    % Plot the subset
-                             %    bar(lagsSubset, acgCountsSubset, 1); % Full-width bars
-                             %    xlabel('Lag (ms)');
-                             %    ylabel('ACG Count');
-                             %    title(['Autocorrelogram ',' RPV=', num2str(percentRPV), '%']);
-                             %    xlim([-windowSizeMs windowSizeMs]); % Set x-limits to ±50 ms
+                            % lags = -floor(size(unitACG{1,:},2)/2) : floor(size(unitACG{1,:},2)/2); % Full lag range
+                            % acgCounts = unitACG{1,:}; % Extract the ACG data
+                            % 
+                            % % Now subset the lags and ACG to only the desired window
+                            % windowSizeMs = 50; % Half window size (±50 ms)
+                            % 
+                            % % Find indices where lag is between -50 and +50
+                            % idxWindow = lags >= -windowSizeMs & lags <= windowSizeMs;
+                            % 
+                            % lagsSubset = lags(idxWindow);
+                            % acgCountsSubset = acgCounts(idxWindow);
+                            % 
+                            % % Plot the subset
+                            % bar(lagsSubset, acgCountsSubset, 1); % Full-width bars
+                            % xlabel('Lag (ms)');
+                            % ylabel('ACG Count');
+                            % title(['Autocorrelogram ',' RPV=', num2str(percentRPV), '%']);
+                            % xlim([-windowSizeMs windowSizeMs]); % Set x-limits to ±50 ms
                              % end
 
                           %Save plot   
@@ -511,7 +512,7 @@ for i_rat = 1 : num_rats
                 end
         end
     end
-    clear
+    
 end
 
 elapsedTime = toc;

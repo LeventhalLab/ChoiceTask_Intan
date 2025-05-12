@@ -278,6 +278,7 @@ spikeStruct.pcFeat = pcFeat;
 spikeStruct.pcFeatInd = pcFeatInd;
 spikeStruct.dataset = datas;
 spikeStruct.templateWaveforms=templateWaveforms;
+spikeStruct.badRowIndices=bad_row_indices;
 
 %spikeStruct.channelMap=channelMap;
 % spikeStruct.maxChannels=maxChannels;

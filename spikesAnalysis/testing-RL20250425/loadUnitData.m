@@ -8,16 +8,9 @@ qMetricsTable=parquetread(fullfile(qMetricsPath,'templates._bc_qMetrics.parquet'
 ephysPropTable=parquetread(fullfile(qMetricsPath,'_bc_parameters._bc_ephysProperties.parquet'));
 acgTable=parquetread(fullfile(qMetricsPath,'templates._bc_acg.parquet'));
 ephysProperties=parquetread(fullfile(qMetricsPath,'templates._bc_ephysProperties.parquet'));
+keepRows = ismember(qMetricsTable.phy_clusterID, unique_clusters);
 qMetricsTable = qMetricsTable(ismember(qMetricsTable.phy_clusterID, unique_clusters), :);
 ephysProperties = ephysProperties(ismember(ephysProperties.phy_clusterID, unique_clusters), :);
-keepRows = false(height(acgTable), 1);
-
-for i = 1:length(unique_clusters)
-    idx = unique_clusters(i) + 1; % because cluster 0 is row 1, cluster 1 is row 2, etc.
-    if idx <= height(acgTable)
-        keepRows(idx) = true;
-    end
-end
 
 % Keep only the rows that match
 acgTable = acgTable(keepRows, :);
