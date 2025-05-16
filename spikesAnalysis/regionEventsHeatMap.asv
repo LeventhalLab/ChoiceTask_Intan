@@ -3,12 +3,12 @@ allEntries = dir(parentDir);
 % Filter only directories, excluding '.' and '..'
 isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
 regionsAvailable = {allEntries(isSubFolder).name};
-excludeNonSelectiveUnits=0; %1 recommended
+excludeNonSelectiveUnits=1; %1 recommended
 excludeSelectiveUnits=0; %0 recommended
-excludeUndeterminable=0; %1 recommended
+excludeUndeterminable=1; %1 recommended
 excludeContralateral=0;
 excludeIpsilateral=0;
-excludeNonResponsive=0;
+excludeNonResponsive=1;
 
 % Specify the behavior we are interested in
 behaviorField = 'correct_cuedleft';
@@ -52,18 +52,13 @@ for i = 1:length(regionsAvailable)
         if ~strcmp(treatmentToProcess,treatment)
             continue
         end
-        if excludeNonResponsive && strcmp(response,'nonResponsive')
-            continue
-        end
-        if excludeSelectiveUnits && (strcmp(noseOutResponsiveness,'ipsilateral') | strcmp(noseOutResponsiveness,'contralateral'))
+        if strcmp(response,'nonResponsive')
             continue
         end
         if excludeIpsilateral && strcmp(noseOutResponsiveness,'ipsilateral')
             continue
         end
-        if excludeContralateral && strcmp(noseOutResponsiveness,'contralateral')
-            continue
-        end
+       
         % Access the specific behavior
         if isfield(behavioralFeatures, behaviorField)
             behavior = behavioralFeatures.(behaviorField);  % Get the behavior structure

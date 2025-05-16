@@ -21,6 +21,7 @@ for i=1:length(regionsAvailable)
     controlEphysProperties=table();
     lesionEphysProperties=table();
     controlUnitFRs=[];
+    
     lesionUnitFRs=[];
     %eventsOverlayed(regionUnits,unitNames,behavioralFeatures)
     for u=1:length(unitNames)

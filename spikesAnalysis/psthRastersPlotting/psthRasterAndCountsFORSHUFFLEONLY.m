@@ -1,4 +1,7 @@
-function [ psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(spikeTimes, eventTimes, window, psthBinSize)
+function [ psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCountsFORSHUFFLEONLY(spikeTimes, eventTimes, window, psthBinSize)
+%This was adapted from psthRastersCounts for shuffle test since the
+%spikeCounts variable will not work since the ranges are NOT ordered
+%because of the permeation test
 % function [psth, bins, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(clusterspikes, ts, window)
 % function to generate psth (spike/bin, Hz, zscored) and raster data to be
 % plotted. 
@@ -34,7 +37,8 @@ rangeLabel = 1:nRanges;
 % which range the spike was in
 wr = WithinRanges(spikeTimes, ranges, rangeLabel', 'vector');
 
-stIn = spikeTimes(wr>0); wr = wr(wr>0); % pick just the spikes and range indices that actually were within a range
+stIn = spikeTimes(wr>0);
+wr = wr(wr>0); % pick just the spikes and range indices that actually were within a range
 stRelToEvent = stIn-eventTimes(wr); % subtract the event time corresponding to each spike
 
 
@@ -56,13 +60,13 @@ spikeCounts = zeros(1, nRanges);
 % spikes of the next. The distance between these breaks are the spike counts
 % Find gives you the indices of these breaks, outer diff computes how many in
 % each.
-try 
-    spikeCounts(ismember(1:nRanges,wr)) = diff(find(diff([0 wr nRanges+1])>0));
-catch ME
-    if contains(ME.message, "Unable to perform assignment because the left and right sides have a different number of elements")
-        keyboard
-        spikeCounts=[];
-    else
-        rethrow(ME)
-    end
-end
+% try 
+%     spikeCounts(ismember(1:nRanges,wr)) = diff(find(diff([0 wr nRanges+1])>0));
+% catch ME
+%     if contains(ME.message, "Unable to perform assignment because the left and right sides have a different number of elements")
+%         keyboard
+%         spikeCounts=[];
+%     else
+%         rethrow(ME)
+%     end
+% end
