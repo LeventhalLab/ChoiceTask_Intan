@@ -26,24 +26,9 @@ function [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRa
 % that occurred within the window around that event. 
 % 
 spikeTimes = spikeTimes/1000;
-
-eventTimes=sort(eventTimes,'ascend');
-keepEventIndices = true(size(eventTimes));
-
-% Loop through the eventTimes and remove events that are too close to the previous one
-try
-    for i = 2:length(eventTimes)
-        if eventTimes(i) - eventTimes(i-1) < window(2)
-            %keyboard
-            keepEventIndices(i) = false; % Mark this event for removal
-        end
-    end
-catch ME
-    keyboard
-end
-eventTimes=eventTimes(keepEventIndices);
-ranges = [eventTimes+window(1) eventTimes+window(2)];
 nRanges = size(eventTimes,1);
+eventTimes=sort(eventTimes,'ascend');
+ranges = [eventTimes+window(1) eventTimes+window(2)];
 rangeLabel = 1:nRanges;
 
 % wr will have one entry per spike, corresponding to an integer identifying

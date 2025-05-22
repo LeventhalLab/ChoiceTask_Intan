@@ -44,5 +44,6 @@ for i_rat = 1 : num_rats
     % strrep(channelRegion,'/','-')
     allRegions = [allRegions; regions];
 end
+uniqueRegions={};
 uniqueRegions=unique(allRegions);
 end
