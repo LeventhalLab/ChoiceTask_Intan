@@ -94,7 +94,13 @@ elseif strcmp(Mode, 'vector')
     if any(nReOrdered(nRanges+1:nPoints+nRanges)>1)
         keyboard
         %error('Some points belong to more than one range');
-        out = rReOrdered(nRanges+1:nPoints+nRanges);
+        try
+            rReOrdered(rReOrdered > nRanges) = nRanges;
+            out = rReOrdered(nRanges+1:nPoints+nRanges);
+        catch ME
+            keyboard
+        end
+        
     else
         out = rReOrdered(nRanges+1:nPoints+nRanges);
     end

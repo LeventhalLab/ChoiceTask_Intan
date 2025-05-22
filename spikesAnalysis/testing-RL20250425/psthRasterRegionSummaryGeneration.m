@@ -50,7 +50,7 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 %[rat_nums, ratIDs, ratIDs_goodhisto] = get_rat_list();
 ratIDs=probe_types.ratID;
 ignoreRats={'R0326','R0327','R0372','R0374','R0379','R0376','R0378','R0394','R0395','R0396','R0411','R0412','R0413','R0419',...
-            'R0425','R0427','R0456','R0459','R0420','R0460','R0463','R0466','R0465','R0467','R0492','R0494','R0495','R0493',''};
+            'R0425','R0427','R0456','R0459'};%,'R0420','R0460','R0463','R0466','R0465','R0467','R0492','R0494','R0495','R0493',''
 num_rats = length(ratIDs);
 
 
@@ -63,7 +63,8 @@ kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertV
 gain_to_uV = 0.195;
 binSize=0.02; %Psth
 
-regionOfinterest={'VM/VL','ZI,'};
+regionOfinterest={'AHP','LH','Mt','Mt/VM','PLH','PaPo','PefLH','PefLH/LH','Rt','Rt/VA','Rt/ns','SubI',...
+    'VA/VPL/VM','VM/VL','VM/VL/VPL','ZI/VM','ZI/SubI'};
 behaviorA={'correct','cuedleft'};
 behaviorAname='Correct Left';
 behaviorB={'wrong','cuedleft'};
