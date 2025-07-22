@@ -3,17 +3,17 @@ allEntries = dir(parentDir);
 % Filter only directories, excluding '.' and '..'
 isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
 regionsAvailable = {allEntries(isSubFolder).name};
-excludeNonSelectiveUnits=1; %1 recommended
+excludeNonSelectiveUnits=0; %1 recommended
 excludeSelectiveUnits=0; %0 recommended
 excludeUndeterminable=1; %1 recommended
 excludeContralateral=0;
 excludeIpsilateral=0;
-excludeNonResponsive=1;
+excludeNonResponsive=0;
 
 % Specify the behavior we are interested in
-behaviorField = 'correct_cuedleft';
+behaviorField = 'correct_cuedright';
 potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
-treatmentToProcess='control';
+treatmentToProcess='lesion';
 for i = 1:length(regionsAvailable)
     region = regionsAvailable{i};
     regionPath = fullfile(parentDir, region);
@@ -22,56 +22,99 @@ for i = 1:length(regionsAvailable)
     regionMatFile = load(matFileName);
     regionUnits = regionMatFile.regionUnits;
     unitNames = fields(regionUnits);
-    unitNames = sort(unitNames);
+    unitNames = sort(unitNames); %%%% start of new code
+    eventOrder = potentialeventNames;
+    defaultRank = length(eventOrder) + 1;
+    
+    primaryEvents = cell(size(unitNames));
+    eventRanks = zeros(size(unitNames));
     % Initialize a structure to store zscoredHz for each event
     eventHeatMaps = struct(); 
     
+    for u = 1:length(unitNames)
+        unitID = unitNames{u};
+        if isfield(regionUnits.(unitID).unitMetrics.unitClass, behaviorField)
+            unitClass = regionUnits.(unitID).unitMetrics.unitClass;
+            if isfield(unitClass.(behaviorField), 'primaryEvent')
+                primaryEvent = unitClass.(behaviorField).primaryEvent;
+                primaryEvents{u} = primaryEvent;
+    
+                % Find rank from potentialeventNames
+                idx = find(strcmp(primaryEvent, eventOrder), 1);
+                if ~isempty(idx)
+                    eventRanks(u) = idx;
+                else
+                    eventRanks(u) = defaultRank;
+                end
+            else
+                primaryEvents{u} = 'unknown';
+                eventRanks(u) = defaultRank;
+            end
+        else
+            primaryEvents{u} = 'unknown';
+            eventRanks(u) = defaultRank;
+        end
+    end
 
+    % Sort unitNames by event rank
+    [~, sortIdx] = sort(eventRanks);
+    unitNames = unitNames(sortIdx); %%%%end of new code
+    % Initialize a structure to store zscoredHz for each event
+    eventHeatMaps = struct(); 
+    
+    filteredUnitNames={};
     for u = 1:length(unitNames)
         unitID = unitNames{u};
         behavioralFeatures = regionUnits.(unitID).behavioralFeatures;
         treatment= regionUnits.(unitID).unitMetrics.treatement;
         unitClass=regionUnits.(unitID).unitMetrics.unitClass;
-        if ~isstruct(unitClass.directionDependence)
-            noseOutResponsiveness=unitClass.directionDependence;
-            
-        elseif ~isfield(unitClass.directionDependence,'direction')
-           noseOutResponsiveness='undeterminable';
-        else
-            noseOutResponsiveness=unitClass.directionDependence.direction;
-        end
-        if excludeUndeterminable && strcmp(noseOutResponsiveness,'undeterminable')
-            continue
-        end
-            
-        if excludeNonSelectiveUnits && strcmp(noseOutResponsiveness,'NotDirectionallySelective') 
-            continue
-        end
-        
-        response= unitClass.type;    
         if ~strcmp(treatmentToProcess,treatment)
             continue
         end
-        if strcmp(response,'nonResponsive')
-            continue
-        end
-        if excludeIpsilateral && strcmp(noseOutResponsiveness,'ipsilateral')
-            continue
-        end
-       
+        % if ~isstruct(unitClass.directionDependence)
+        %     noseOutResponsiveness=unitClass.directionDependence;
+        % 
+        % elseif ~isfield(unitClass.directionDependence,'direction')
+        %    noseOutResponsiveness='undeterminable';
+        % else
+        %     noseOutResponsiveness=unitClass.directionDependence.direction;
+        % end
+        % if excludeUndeterminable && strcmp(noseOutResponsiveness,'undeterminable')
+        %     continue
+        % end
+        % 
+        % if excludeNonSelectiveUnits && strcmp(noseOutResponsiveness,'NotDirectionallySelective') 
+        %     continue
+        % end
+        % 
+        % response= unitClass.type;    
+        % 
+        % if excludeNonResponsive && strcmp(response,'nonResponsive')
+        %     continue
+        % end
+        % if excludeSelectiveUnits && (strcmp(noseOutResponsiveness,'ipsilateral') | strcmp(noseOutResponsiveness,'contralateral'))
+        %     continue
+        % end
+        % if excludeIpsilateral && strcmp(noseOutResponsiveness,'ipsilateral')
+        %     continue
+        % end
+        % if excludeContralateral && strcmp(noseOutResponsiveness,'contralateral')
+        %     continue
+        % end
         % Access the specific behavior
         if isfield(behavioralFeatures, behaviorField)
             behavior = behavioralFeatures.(behaviorField);  % Get the behavior structure
-            if ~isfield(unitClass,behaviorField)
-                continue
-            end
+            % if ~isfield(unitClass,behaviorField)
+            %     continue
+            % end
 
-            primaryClass=unitClass.(behaviorField).primaryEvent;
-            if isfield(unitClass.(behaviorField), 'secondaryEvent')
-                secondaryClass=unitClass.(behaviorField).secondaryEvent;
-            end
+            % primaryClass=unitClass.(behaviorField).primaryEvent;
+            % if isfield(unitClass.(behaviorField), 'secondaryEvent')
+            %     secondaryClass=unitClass.(behaviorField).secondaryEvent;
+            % end
             
             % Loop through the event names associated with this behavior
+            filteredUnitNames=unitNames{end+1};
             eventNames = fields(behavior); 
             for e = 1:length(eventNames)
                 eventName = eventNames{e};  % Event name (e.g., 'cueOn', 'sideIn')
@@ -82,7 +125,7 @@ for i = 1:length(regionsAvailable)
                 if isfield(behavior, eventName)
                     eventData = behavior.(eventName);  % Get the event data
                     zscoredHz = eventData.zscoredHz;  % Extract the zscoredHz values
-                    zscoredHz=abs(zscoredHz);
+                    %zscoredHz=abs(zscoredHz);
                     % If this is the first unit or event, initialize the heatmap matrix for this event
                     if ~isfield(eventHeatMaps, eventName)
                         eventHeatMaps.(eventName) = [];
@@ -127,7 +170,7 @@ for i = 1:length(regionsAvailable)
         imagesc(timeBins, 1:size(zscoredData, 1), zscoredData);
         colormap(ax, 'jet');
         
-        clim(ax, [1 4]);  % Synchronize color scale
+        clim(ax, [-2 2]);  % Synchronize color scale
         if j==1
 
             xlabel(ax, 'Time (s)');

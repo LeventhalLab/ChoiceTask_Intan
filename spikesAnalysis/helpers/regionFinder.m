@@ -1,4 +1,4 @@
-function uniqueRegions=regionFinder
+function [uniqueRegions]=regionFinder(rats)
 %% Set up parent directories and ignore rat ids not interested in
 parent_directory = 'X:\Neuro-Leventhal\data\ChoiceTask';
 summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
@@ -24,6 +24,9 @@ for i_rat = 1 : num_rats
     
     rat_folder = fullfile(parent_directory, ratID);
     if any(strcmp(ratID,ignoreRats))
+        continue
+    end
+    if ~any(strcmp(ratID,rats))
         continue
     end
     if ~isfolder(rat_folder)

@@ -12,7 +12,8 @@ eventTimeWindow=0.2; %in secondsthe time +/- around an event to define selectivi
 window=[-1 1];
 binSize=0.02;
 n_shuffles=5000;
-behaviorFields = {'correct_cuedleft','correct_cuedright'};
+behaviorFieldsForShuffle = {'correct_cuedleft','correct_cuedright'};
+runShuffles=0;
 directionSelectivityEvent=['centerOut'];
 potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
 % treatmentToProcess='control';
@@ -21,15 +22,15 @@ for i = 1:length(regionsAvailable)
     region = regionsAvailable{i};
     fprintf('Classifying units in %s\n',region)
     regionPath = fullfile(parentDir, region);
-    
+
     matFileName = strcat(region, '_unitSummary.mat');
     regionFileName=fullfile(regionPath, matFileName);
     load(regionFileName)
     disp('loaded region summary mat file')
-    % regionUnits = regionMatFile.regionUnits;
+    
     unitNames = fields(regionUnits);
     unitNames = sort(unitNames);
-   
+
     
     for u = 1:length(unitNames)
         tic
@@ -41,29 +42,36 @@ for i = 1:length(regionsAvailable)
         if ~isfield(unitMetrics, 'unitClass')    
             regionUnits.(unitID).unitMetrics.unitClass=struct;
         end
-        unitSelectivity=unitDirectionSelectivity(behavioralFeatures,spikeTimes,behaviorFields,directionSelectivityEvent,window,binSize,n_shuffles);
-        regionUnits.(unitID).unitMetrics.unitClass.directionDependence=unitSelectivity;
-
-        treatment= regionUnits.(unitID).unitMetrics.treatement;
-        if ~strcmp(treatmentToProcess,treatment)
-            continue
+        if runShuffles
+            unitSelectivity=unitDirectionSelectivity(behavioralFeatures,spikeTimes,behaviorFieldsForShuffle,directionSelectivityEvent,window,binSize,n_shuffles);
+            regionUnits.(unitID).unitMetrics.unitClass.directionDependence=unitSelectivity;
         end
+        
+  
         %Access the specific behavior
         
         max_zscore=-inf;
         max_zscore2=-inf;
         primaryEvent=[];
         secondaryEvent=[];
+        behaviorFields=fields(behavioralFeatures);
         for b=1:length(behaviorFields)
             behaviorField=behaviorFields{b};
+            
             fprintf('Determining event responsiveness during %s\n',behaviorField)
             if isfield(behavioralFeatures, behaviorField)
                 behavior = behavioralFeatures.(behaviorField);  % Get the behavior structure
                 % Loop through the event names associated with this behavior
+                primaryEvent=[];
+                secondaryEvent=[];
+                max_zscore=-inf;
+                max_zscore2=-inf;
                 eventNames = fields(behavior); 
                 for e = 1:length(eventNames)
                     eventName = eventNames{e};  % Event name (e.g., 'cueOn', 'sideIn')
-                    
+                    if strcmp(eventName,'wrong')
+                        continue
+                    end
                     if ~any(strcmp(eventName,potentialeventNames))
                         continue
                     end
@@ -162,20 +170,27 @@ for i = 1:length(regionsAvailable)
                       
                     end
                 end
-            end
-            if ~isempty(primaryEvent)
-                regionUnits.(unitID).unitMetrics.unitClass.type='Responsive';
-                regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).primaryEvent=primaryEvent;
-                regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).primaryabsZScoreValue=max_zscore;
-                regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).primaryZScoreValue=rawZscore;
-                if ~isempty(secondaryEvent)
-                    regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).secondaryEvent=secondaryEvent;
-                    regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).secondaryabsZScoreValue=max_zscore2;
-                    regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).secondaryZScoreValue=rawZscore2;
+                if ~isempty(primaryEvent)
+                    regionUnits.(unitID).unitMetrics.unitClass.type='Responsive';
+                    regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).primaryEvent=primaryEvent;
+                    regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).primaryabsZScoreValue=max_zscore;
+                    regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).primaryZScoreValue=rawZscore;
+                    if ~isempty(secondaryEvent)
+                        if strcmp(secondaryEvent,primaryEvent)
+                            keyboard
+                        end
+                        regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).secondaryEvent=secondaryEvent;
+                        regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).secondaryabsZScoreValue=max_zscore2;
+                        regionUnits.(unitID).unitMetrics.unitClass.(behaviorField).secondaryZScoreValue=rawZscore2;
+                    end
+                elseif isfield(regionUnits.(unitID).unitMetrics.unitClass,'type') && strcmp(regionUnits.(unitID).unitMetrics.unitClass.type,'Responsive')
+                    
+                    continue
+                else 
+                    regionUnits.(unitID).unitMetrics.unitClass.type='nonResponsive';
                 end
-            else
-                regionUnits.(unitID).unitMetrics.unitClass.type='nonResponsive';
             end
+            
         end
     fprintf('Finished %s\n',unitID)
     toc
