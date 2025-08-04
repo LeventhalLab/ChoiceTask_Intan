@@ -1,6 +1,4 @@
-%%% Script to combine regions for analysis of a given behavior
-
-
+%% Script to combine regions into a single mat file
 
 parentDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
 allEntries = dir(parentDir);
@@ -16,7 +14,7 @@ params.potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn'
 % lesion or control?
 params.treatmentToProcess='control';
 combinedRegionName='cbRecipientsBroad';
-regionsToCombine={'VA-VPL-VM','VL','VL-VPL','VL-VPL-VPM','VM-VL','VM-VL-VPL','VA-VPL-VM'};
+regionsToCombine={'VL','VL-VPL','VL-VPL-VPM','VL-VPL','VA-VPL-VM','VM-VL-VPL'};
 plotHeatMap=0;
 % Specify the behavior we are interested in plotting for heat map
 params.behaviorField = 'correct_cuedleft';

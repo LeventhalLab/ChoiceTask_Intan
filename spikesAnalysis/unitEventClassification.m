@@ -3,23 +3,42 @@
 %scored value, this is considered the primary event. See gaidica leventhal
 %et al 2018
 parentDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
-allEntries = dir(parentDir);
-% Filter only directories, excluding '.' and '..'
-isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
-regionsAvailable = {allEntries(isSubFolder).name};
+processSpecificSessions=1;% do you want to only process a specific subset of sessions?
+removeOldUnits=0; %do you want to remove the units from this session that were previously processed?
+if processSpecificSessions
+    sessions_to_process={'R0465_20230420a',	'R0544_20240625a',	'R0544_20240626a',	'R0544_20240627a',	'R0544_20240628b',	'R0544_20240701a',	'R0544_20240702a',	'R0544_20240703a',	'R0544_20240708a',	'R0544_20240709b',	'R0544_20240710a',...
+    'R0544_20240711a',	'R0546_20240715a',	'R0546_20240716a',	'R0546_20240717a',	'R0572_20240924a',	'R0545_20250113a'};
+    ratsToReprocess={'R0465','R0544','R0545','R0546','R0572'};
+    [regionsAvailable]=regionFinder(ratsToReprocess);
+else
+    allEntries = dir(parentDir);
+    % Filter only directories, excluding '.' and '..'
+    isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
+    regionsAvailable = {allEntries(isSubFolder).name};
+end
+ignoreRegions={};
+% allEntries = dir(parentDir);
+% % Filter only directories, excluding '.' and '..'
+% isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
+% regionsAvailable = {allEntries(isSubFolder).name};
 eventTimeWindow=0.2; %in secondsthe time +/- around an event to define selectivity
 % Specify the behavior we are interested in
 window=[-1 1];
 binSize=0.02;
 n_shuffles=5000;
 behaviorFieldsForShuffle = {'correct_cuedleft','correct_cuedright'};
-runShuffles=0;
+runShuffles=1;
 directionSelectivityEvent=['centerOut'];
 potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
 % treatmentToProcess='control';
 for i = 1:length(regionsAvailable)
     tic
     region = regionsAvailable{i};
+    if strcmp(region,ignoreRegions)
+        fprintf('skipping %s\n',region)
+        continue
+    end
+    region=strrep(region,'/','-');
     fprintf('Classifying units in %s\n',region)
     regionPath = fullfile(parentDir, region);
 
@@ -30,11 +49,18 @@ for i = 1:length(regionsAvailable)
     
     unitNames = fields(regionUnits);
     unitNames = sort(unitNames);
-
+    
     
     for u = 1:length(unitNames)
         tic
         unitID = unitNames{u};
+        if ~startsWith(unitID,'R')
+            continue
+        end
+        if processSpecificSessions && ~startsWith(unitID,sessions_to_process)
+            fprintf('skipping %s\n',unitID)
+            continue
+        end
         fprintf('Classifying %s\n',unitID)
         behavioralFeatures = regionUnits.(unitID).behavioralFeatures;
         unitMetrics=regionUnits.(unitID).unitMetrics;

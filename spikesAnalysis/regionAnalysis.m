@@ -1,3 +1,6 @@
+%% Script that generates a unit table which summarizes every units metrics into one combined table for each region
+
+
 parentDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
 allEntries = dir(parentDir);
 % Filter only directories, excluding '.' and '..'
@@ -58,8 +61,11 @@ for i = 1:length(regionsAvailable)
     matFileName = strcat(region, '_unitSummary.mat');
     regionFileName=fullfile(regionPath,matFileName);
     load(regionFileName);
-    if strcmp(region,'cbRecipients')
+    if strcmp(region,'cbRecipients') || strcmp(region,'cbRecipientsBroad')
         keyboard
+    end
+    if strcmp(region,'x')
+        continue
     end
     %regionUnits = regionMatFile.regionUnits;
     [unitTable,saveRegionFlag]=regionStatistics(regionUnits);

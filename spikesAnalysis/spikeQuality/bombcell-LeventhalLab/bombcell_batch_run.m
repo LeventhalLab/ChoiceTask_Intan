@@ -15,10 +15,13 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 %[rat_nums, ratIDs, ratIDs_goodhisto] = get_rat_list();
 ratIDs=probe_types.ratID;
 ignoreRats={'R0326','R0327','R0372','R0374','R0379','R0376','R0378','R0394','R0395','R0396','R0411','R0412','R0413','R0419',...
-            'R0425','R0427','R0456','R0459','R0420','R0460','R0463','R0466','R0479','R0465','R0467','R0492','R0493','R0494','R0495',...
-            'R0546','R0572', 'R0545'};%'R0544'
+            'R0425','R0427','R0456','R0459','R0420','R0460','R0463','R0466','R0479','R0467','R0492','R0493','R0494','R0495',...
+            'R0544'};%'R0546','R0572', 'R0545','R0465'
 num_rats = length(ratIDs);
-
+processSpecificSessions=1;
+if processSpecificSessions
+    sessions_to_process={'R0465_20230420a',	'R0546_20240715a',	'R0546_20240716a',	'R0546_20240717a',	'R0572_20240924a',	'R0545_20250113a'};
+end
 for i_rat = 1 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
@@ -37,10 +40,13 @@ for i_rat = 1 : num_rats
 
     for i_session = 1 : num_sessions
         
+            
         session_name = session_dirs(i_session).name;
         cur_dir = fullfile(session_dirs(i_session).folder, session_name);
         cd(cur_dir)
-
+        if processSpecificSessions && ~any(strcmp(session_name,sessions_to_process))
+            continue
+        end
         phys_folder = find_physiology_data(cur_dir);
 
         if isempty(phys_folder)

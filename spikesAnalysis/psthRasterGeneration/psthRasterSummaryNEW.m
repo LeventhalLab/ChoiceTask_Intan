@@ -36,24 +36,27 @@
 
 
 %% Set up parent directories and ignore rat ids not interested in
-regionDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
-allEntries = dir(regionDir);
-% Filter only directories, excluding '.' and '..'
-isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
-regionsAvailable = {allEntries(isSubFolder).name};
-%regionsAvailable={'VM'};
+
+
 parent_directory = 'X:\Neuro-Leventhal\data\ChoiceTask';
 summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
 summary_xls_dir = 'X:\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
 sessions_to_ignore = {'R0378_20210507a', 'R0326_20191107a', 'R0425_20220728a', 'R0425_20220816b', 'R0427_20220920a','R0427_20220919a','R0479_20230601a',}; % 'R0493_20230720a' R0425_20220728a debugging because the intan side was left on for 15 hours;
-processSpecificSessions=1;
 
+processSpecificSessions=1;% do you want to only process a specific subset of sessions?
+removeOldUnits=0; %do you want to remove the units from this session that were previously processed?
 if processSpecificSessions
     sessions_to_process={'R0465_20230420a',	'R0544_20240625a',	'R0544_20240626a',	'R0544_20240627a',	'R0544_20240628b',	'R0544_20240701a',	'R0544_20240702a',	'R0544_20240703a',	'R0544_20240708a',	'R0544_20240709b',	'R0544_20240710a',...
     'R0544_20240711a',	'R0546_20240715a',	'R0546_20240716a',	'R0546_20240717a',	'R0572_20240924a',	'R0545_20250113a'};
     ratsToReprocess={'R0465','R0544','R0545','R0546','R0572'};
     [regionsAvailable]=regionFinder(ratsToReprocess);
+else
+    regionDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
+    allEntries = dir(regionDir);
+    % Filter only directories, excluding '.' and '..'
+    isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
+    regionsAvailable = {allEntries(isSubFolder).name};
 end
 probe_type_sheet = 'probe_type';
 probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
@@ -75,25 +78,26 @@ plotACG=true;
 kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertVersion=4. Otherwise it does not matter. 
 gain_to_uV = 0.195;
 binSize=0.02; %Psth
-
+ignoreTheseRegions=0; % do you specifically want to ignore some regions?
+ignoreRegions={'AHP','PLH','PaPo','SubI','VL'};
 %regionOfinterest={'AHP','LH','Mt','Mt/VM','PLH','PaPo','PefLH','PefLH/LH','Rt','Rt/VA','Rt/ns','SubI',...
     % 'VA/VPL/VM','VM/VL','VM/VL/VPL','ZI/VM','ZI/SubI'};
-behaviorA={'alltrials'};
-behaviorAname='All Trials';
-behaviorB={'wrong'};
-behaviorBname='All wrong trials';
-behaviorC={'correct'};
-behaviorCname='All trials';
-behaviorD={'cuedleft'};
-behaviorDname='All cued left trials';
-behaviorE={'cuedright'};
-behaviorEname='All cued right trials';
-behaviorF={'moveleft'};
-behaviorFname='All move left trials';
-behaviorG={'moveright'};
-behaviorGname='All move right trials';
+behaviorA={'wrong','cued_left'};
+behaviorAname='wrong_cuedleft';
+behaviorB={'correct','cuedleft'};
+behaviorBname='correct_cuedleft';
+behaviorC={'correct','cuedright'};
+behaviorCname='correct_cuedright';
+behaviorD={'cuedleft','slowmovement'};
+behaviorDname='cuedleft_slowmovement';
+behaviorE={'cuedleft','slowreaction'};
+behaviorEname='cuedleft_slowreaction';
+behaviorF={'cuedleft','moveright'};
+behaviorFname='cuedleft_moveright';
+behaviorG={'cuedright','wrong'};
+behaviorGname='cuedright_wrong';
 outputTitle=[];
-%include only this region- true: include overlap regions=false
+%include only this region- true: include overlap regions=false currently not working
 regionSpecific=true;
 
 %% Clear out unused behaviors
@@ -117,11 +121,14 @@ wholeSetTimer=tic;
 T=zeros(1,length(regionsAvailable));
 for r=1:length(regionsAvailable)
     regionOfinterest=regionsAvailable{r};
-    % if any(strcmp(regionOfinterest,ignoreRegions))
-    %     T(r)=[];
-    %     fprintf('Ignoring units in based on given info %s\n',regionOfinterest)
-    %     continue
-    % end
+    if ignoreTheseRegions
+        if any(strcmp(regionOfinterest,ignoreRegions))
+            T(r)=[];
+            fprintf('Ignoring units in based on given info %s\n',regionOfinterest)
+            continue
+        end
+    end
+    regionOfinterest=strrep(regionOfinterest,'/','-');
     tic
     fprintf('Working on region %s\n',regionOfinterest)
     regionSummaryPath=fullfile(parent_directory,'RegionalSummary');
@@ -133,6 +140,10 @@ for r=1:length(regionsAvailable)
         disp('region loaded')
     else
         regionUnits=struct();
+    end
+    if processSpecificSessions && removeOldUnits
+         regionUnits=archiveReprocessedSessionUnits(regionUnits,sessions_to_process);
+         disp('placing sessions who units were reprocessed into a new object named previouslyCurated')
     end
   for i_rat = 1 : num_rats
         ratID = ratIDs{i_rat};
@@ -221,26 +232,7 @@ for r=1:length(regionsAvailable)
             % trials(isConflictOnly)=[];
             disp('Behavioral data loaded...')
             if ~isempty(trials)
-                %loop for creating psth and rasters for units during ANY
-                %correct trial
-                % if parameter.Allcorrect
-                %Create struct of timestamps for events that you're and remove
-                %event names that dont exist 
-                    %%%%%4/7
-                    % [ts_data,valid_trials,valid_trial_flags,valid_eventNames] =unit_correct_trial_data_RL(trials, trialfeatures,eventNames);  
-                    % if length(valid_trials)<3
-                    %     sprintf('not enough valid trials for the given trialfeature for %s', sessionName)
-                    %     continue
-                    % end
-                                    % eventNames=valid_eventNames;
-                    % eventNames = eventNames(~strcmp(eventNames, 'foodClick'));
-                    %%%%%2025
-                    % for e = 1:length(eventNames)
-                    %     eventName=eventNames{e};
-                    %     if ~isfield(ts_data.(eventName))
-                    %         eventNames=erase(eventNames,eventName);
-                    %     end
-                    % end
+                %loop for creating psth and rasters for units
     
                     %% load in ephys data, for now going to exclude all non-soma, MUA, and noise units.
                     %see loadKSdir_RL params.exclude* for altering this param
@@ -262,9 +254,7 @@ for r=1:length(regionsAvailable)
                         %     eventNames = eventNames(~strcmp(eventNames, 'foodClick'));
                         %     behaviorTitle=trialName{i};
                         %%%%2025
-                        %% Identify clusters that are from the session but already exist and are clearly old?? Possibly create cluster names as a list
-                        % and then put the ones that dont exst into an
-                        % archived object within the mat file?
+                        
 
                         for g = 1:size(cluster_spikes, 1)
                               
@@ -275,8 +265,7 @@ for r=1:length(regionsAvailable)
                               clusRegion=channelRegion(channelRegion(:,1)==num2str(clusChannel),2);
                               clusRegion=clusRegion{1};
                               clusRegion=strrep(clusRegion,'/','-');
-                              %Add another option for strfind to include
-                              %overlap regions 
+                             
                               if any(strcmp(clusRegion,regionOfinterest))
                                   unitID=strcat(sessionName, '_Unit_',num2str(clusID),'_Treatment_',ratTreatment);
                                   if ~isfield(regionUnits,unitID)
@@ -293,7 +282,6 @@ for r=1:length(regionsAvailable)
                                   %     regionUnits.(unitID)=struct();
                                   %     %regionUnits.(unitID)={};
                                   % end
-                                  %% Load existing file here and load existing unit within here
                               else
                                   continue
                               end
@@ -304,7 +292,7 @@ for r=1:length(regionsAvailable)
                                  % the two second window before all cue on events during the session                      
                              [meanFR,stdMeanFR]=preCueOnData(cluster_spikes(g,:)',trials,'cueOn',binSize);
                              
-                             %create unit metric info struct%
+                             %% create unit metric info struct
                              meanFR=round(meanFR,1);
                              stdMeanFR=round(stdMeanFR,1);
                              unitACG=rawEphysData.acgTable(g,:);
@@ -315,7 +303,7 @@ for r=1:length(regionsAvailable)
                              percentRPV=round((unitRPV*100),1);
                              unitAmplitude=round(unitQmetrics.rawAmplitude,0);
                              rawUnitWaveformsPath=rawEphysData.rawWaveformsPath;
-                             %% UnitMetrics Struct-- ADD DETAILS ABOUT INFO
+                             
                              if ~isfield(regionUnits.(unitID),'unitMetrics')
                                  
                                  regionUnits.(unitID).unitMetrics={};
@@ -334,7 +322,7 @@ for r=1:length(regionsAvailable)
                              end
                              %%%
     
-                             %% Set parameters for tiled layout
+                             %% Set parameters for tiled layout --CURRENTLY NOT USED
                              % maxNcols=-inf;
                              %  for c=1:length(trialfeatureList)
                              %      behName=trialfeatureList{c};
@@ -366,6 +354,9 @@ for r=1:length(regionsAvailable)
                              %     '\rm',' FR(+/-)= ', num2str(meanFR), '+/-', num2str(stdMeanFR), ' Hz',' Amp= ', num2str(unitAmplitude), 'uV ', ...
                              %     ' SNR= ', num2str(unitSNR)]); 
                              % subtitle(t, 'Z-score significance: Blue = z>3 | Orange = z<-3');
+                             
+                             % only calculate the units that need to still
+                             % be processed
                              if ~isfield(regionUnits.(unitID), 'behavioralFeatures')
                                         regionUnits.(unitID).behavioralFeatures=struct();
                              end
@@ -440,7 +431,7 @@ for r=1:length(regionsAvailable)
                                         [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(cluster_spikes(g, :)', ts, [-1 1], binSize);
                                         zscoredHz=(psthHz-meanFR) ./ stdMeanFR;
                                         
-                                        %Plot PSTH
+                                        %% Plot PSTH
                                         % rowOffset = (i-1)*2;  % Each behavior takes up 2 rows (PSTH + raster)
                                         % nexttile(rowOffset*numCols + e);
                                         % sigBinsIncrease = zscoredHz > 3;
@@ -474,7 +465,7 @@ for r=1:length(regionsAvailable)
                                         % median_x = median(bins);
                                         % xline(median_x, 'r--', 'LineWidth', 0.5);
                                         
-                                        %plot raster stacked below PSTH
+                                        %% plot raster stacked below PSTH
                                         % nexttile((rowOffset+1)*numCols + e);
                                         % plot(rasterX, rasterY,'k.','MarkerSize',1);
                                         % xlim([-1 1]);
@@ -555,7 +546,7 @@ for r=1:length(regionsAvailable)
                     end
             end
             clearvars('intan_data', 'digital_data', 'nexData', 'both_log_files', 'log_file', 'logData', 'trials', 'logConflict', 'isConflict',... 
-                'isConflictOnly', 'boxLogConflict',             'spikeStruct', 'clu', 'st', 'unique_clusters', 'numSpks', 'cluster_spikes','rawEphysData')
+                'isConflictOnly', 'boxLogConflict', 'spikeStruct', 'clu', 'st', 'unique_clusters', 'numSpks', 'cluster_spikes','rawEphysData')
         end
         
   end

@@ -1,0 +1,50 @@
+function regionUnits=findUnitMatches(UMstruct,regionUnits)
+%% Function to find and store all UIDs from unitMatch table for units in a region
+%only saves matches that were deemed as 'real' or 1 in the WSNU0146 columnn
+%of match table. Ignores same unit matches. 
+
+unitNames=fields(regionUnits);
+MatchTable=UMstruct.MatchTable;
+goodMatches=UMassessment(MatchTable);
+for u=1:length(unitNames)
+    unitID=unitNames{u};
+    if ~startsWith(unitID,'R')
+        continue
+    end
+    if startsWith(unitID,'R0546')
+        if isfield(regionUnits.(unitID).unitMetrics,'UIDs')
+            regionUnits.(unitID).unitMetrics.UIDs=[];
+        end
+        continue
+    end
+    unitPath=regionUnits.(unitID).unitMetrics.rawUnitWaveformsPath;
+    unitKSdir=strfind(unitPath,'kilosort4');
+    unitKSdir = unitPath(1:unitKSdir + length('kilosort4') - 1);
+    unitPhyID= regionUnits.(unitID).unitMetrics.ephysProperties.phy_clusterID; %0 sclaed
+    %unitClusterID= regionUnits.(unitID).unitMetrics.ephysProperties.clusterID; % 1 scaled
+    %channel=regionUnits.(unitID).unitMetrics.ephysProperties.maxChannels;
+    RecSesID = find(strcmp(UMstruct.UMparam.KSDir, unitKSdir));
+    MT = goodMatches;
+    
+    % Logical index of matches
+    try
+        isMatch = ...
+            ( (MT.ID1 == unitPhyID & MT.RecSes1 == RecSesID) | ...
+              (MT.ID2 == unitPhyID & MT.RecSes2 == RecSesID) ) & ...
+            (MT.UID1 == MT.UID2) & MT.WSNU0146==1;
+    catch ME
+        keyboard
+    end
+    % Get matching UIDs
+    matchingUIDs = unique(MT.UID1(isMatch));
+    
+    % Store in regionUnits
+    if isfield(regionUnits.(unitID).unitMetrics,'UIDs')
+        regionUnits.(unitID).unitMetrics.UIDs=[];
+    end
+    regionUnits.(unitID).unitMetrics.UIDs = matchingUIDs;
+    if ~isempty(regionUnits.(unitID).unitMetrics.UIDs)
+        fprintf('matches found for %s/n',unitID)
+    end
+end
+        

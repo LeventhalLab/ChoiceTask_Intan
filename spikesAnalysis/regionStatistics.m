@@ -17,6 +17,15 @@ for u = 1:numel(unitNames)
         continue;
     end
     treatment = unit.treatement;
+    if isfield(unit,'UIDs')
+        if length(unit.UIDs)>1
+            keyboard
+        else
+            MatchedUnitID=unit.UIDs;
+        end
+    else
+        keyboard
+    end
 
     % Direction selectivity if available
     if isfield(unit, 'unitClass') && isstruct(unit.unitClass.directionDependence)
@@ -96,7 +105,7 @@ for u = 1:numel(unitNames)
             end
 
             % Add row
-            row = {unitID, treatment, directionSelectivity, type, behavior, primaryEvent, secondaryEvent, primaryZScoreValue, secondaryZScoreValue};
+            row = {unitID, treatment, directionSelectivity, type, behavior, primaryEvent, secondaryEvent, primaryZScoreValue, secondaryZScoreValue,MatchedUnitID};
             allData(end+1, :) = row;
         end
     else
@@ -109,7 +118,7 @@ end
 % Convert to table
 unitTable = cell2table(allData, 'VariableNames', ...
     {'unitID', 'treatment', 'directionSelectivity', 'type', ...
-     'behavior', 'primaryEvent', 'secondaryEvent', 'primaryZScoreValue', 'secondaryZScoreValue'});
+     'behavior', 'primaryEvent', 'secondaryEvent', 'primaryZScoreValue', 'secondaryZScoreValue','MatchedUnitID'});
 
 % Optional: sort by treatment and unitID
 unitTable = sortrows(unitTable, {'treatment', 'unitID'});
