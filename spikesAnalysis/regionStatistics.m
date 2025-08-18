@@ -18,13 +18,11 @@ for u = 1:numel(unitNames)
     end
     treatment = unit.treatement;
     if isfield(unit,'UIDs')
-        if length(unit.UIDs)>1
-            keyboard
-        else
+        try
             MatchedUnitID=unit.UIDs;
+        catch ME
+            keyboard
         end
-    else
-        keyboard
     end
 
     % Direction selectivity if available

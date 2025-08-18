@@ -40,17 +40,14 @@ for u=1:length(unitNames)
     end
     % Get matching UIDs
     matchingUIDs = unique(MT.UID1(isMatch));
-    if isempty(matchingUIDs)
-        fprintf('No matches found for %s\n',unitID)
-        continue
-    end
+    
     % Store in regionUnits
     if isfield(regionUnits.(unitID).unitMetrics,'UIDs')
         regionUnits.(unitID).unitMetrics.UIDs=[];
     end
     regionUnits.(unitID).unitMetrics.UIDs = matchingUIDs;
     if ~isempty(regionUnits.(unitID).unitMetrics.UIDs)
-        fprintf('matches found for %s ',unitID)
+        fprintf('matches found for %s/n',unitID)
     end
 end
         

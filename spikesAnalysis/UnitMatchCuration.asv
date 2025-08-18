@@ -1,5 +1,5 @@
 parent_directory = 'X:\Neuro-Leventhal\data\ChoiceTask';
-ratID = 'R0463';
+ratID = 'R0572';
     
 rat_folder = fullfile(parent_directory, ratID);
 
@@ -7,7 +7,7 @@ rat_folder = fullfile(parent_directory, ratID);
 % if ~exist(fullfile(rat_folder,'MatchingUnits/UnitMatch'))
 %     keyboard
 % end
-UMSaveDir = fullfile(rat_folder,'MatchingUnits/UnitMatch'); 
+UMSaveDir = fullfile(rat_folder,'MatchingUnits2'); 
 
 
 %% -- Evaluating the output -- (optional)
@@ -15,21 +15,21 @@ UMSaveDir = fullfile(rat_folder,'MatchingUnits/UnitMatch');
 %% If you want, you can run additional scripts to evaluate the results:
 
 % Within session cross-validation
-%EvaluatingUnitMatch(UMSaveDir); 
+EvaluatingUnitMatch(UMSaveDir); 
 
 % Evaluating the matching using functional scores (only works when having access to Kilosort output, e.g. spike times etc. )
-%ComputeFunctionalScores(UMSaveDir)
+ComputeFunctionalScores(UMSaveDir)
 
 
 %% You can also visualize the units on the probe:
-load(fullfile(UMSaveDir,'UnitMatch.mat'))
+load(fullfile(UMSaveDir,'UnitMatch2.mat'))
 load(fullfile(UMSaveDir,'UnitMatchModel.mat'))
 load(fullfile(UMSaveDir,'MatchingScores.mat'))
 load(fullfile(UMSaveDir,'AUC.mat'))
 %PlotUnitsOnProbe(clusinfo,UMparam,UniqueIDConversion,WaveformInfo)
-% [~,MatchTable]=UMassessment2(MatchTable);
-% goodTbl = Tbl(MatchTable.MatchIdx, :);
-% uncuratedMatchTable=MatchTable;
+[~,MatchTable]=UMassessment2(MatchTable);
+goodTbl = Tbl(MatchTable.MatchIdx, :);
+uncuratedMatchTable=MatchTable;
 % uncuratedTbl=Tbl;
 % 
 % % Save uncuratedMatchTable to UnitMatch.mat
@@ -42,9 +42,9 @@ load(fullfile(UMSaveDir,'AUC.mat'))
 % MatchTable=goodMatches;
 %% Curation:
 if UMparam.MakePlotsOfPairs
-   % DrawPairsUnitMatch(UMparam.SaveDir); %% If figure flick throws an error that says "images not drawn" run this line for now commented out
+    %DrawPairsUnitMatch(UMparam.SaveDir); %% If figure flick throws an error that says "images not drawn" run this line for now commented out
     if UMparam.GUI
-        FigureFlick(UMSaveDir) % modified figureflick.m to load UnitMatch2.mat (line 35/193)
+        FigureFlick(UMSaveDir,'RL',1) % modified figureflick.m to load UnitMatch2.mat (line 35/193)
         pause
     end
 end
