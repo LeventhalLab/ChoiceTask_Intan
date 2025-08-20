@@ -1,3 +1,5 @@
+%% Script that combines all of the region unit tables into one big table
+
 parentDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
 allEntries = dir(parentDir);
 
@@ -29,7 +31,7 @@ tic
 for i = 1:length(regionsAvailable)
     region = regionsAvailable{i};
     fprintf('🔍 Working on region %s\n', region)
-    if strcmp(region,'cbRecipients')
+    if strcmp(region,'cbRecipients') || strcmp(region, 'cbRecipientsBroad')
         continue
     end
     params.region = region;

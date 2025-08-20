@@ -11,7 +11,7 @@ excludeIpsilateral=0;
 excludeNonResponsive=0;
 
 % Specify the behavior we are interested in
-behaviorField = 'correct_cuedright';
+behaviorField = 'alltrials';
 potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
 treatmentToProcess='lesion';
 for i = 1:length(regionsAvailable)

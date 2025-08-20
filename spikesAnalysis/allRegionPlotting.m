@@ -1,3 +1,5 @@
+%% 
+
 parentDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
 allEntries = dir(parentDir);
 

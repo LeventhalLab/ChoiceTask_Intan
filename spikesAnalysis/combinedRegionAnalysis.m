@@ -13,8 +13,8 @@ params={};
 params.potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
 % lesion or control?
 params.treatmentToProcess='control';
-combinedRegionName='cbRecipientsBroad';
-regionsToCombine={'VL','VL-VPL','VL-VPL-VPM','VL-VPL','VA-VPL-VM','VM-VL-VPL'};
+combinedRegionName='cbRecipients';
+regionsToCombine={'VL','VL-VPL','VL-VPL-VPM'};
 plotHeatMap=0;
 % Specify the behavior we are interested in plotting for heat map
 params.behaviorField = 'correct_cuedleft';
@@ -33,7 +33,7 @@ params.excludeIpsilateral=0;
 params.excludeNonResponsive=0;
 %Gaidica leventhal '18 used [-.5 2] inspect data
 params.zScale=[-2 2];
-params.heatMapTitle='CB Recipient Zones all units';
+params.heatMapTitle='CB Recipient Zones no VM overlapping units';
 %% ONLY SET TO 1 IF YOU ARE PLANNING TO CONTINUE DOING ANALYSIS ON A REGION
 reuseWorkspace=0;
 %specify for mat file that is more generic in nature (ie not segregated)
