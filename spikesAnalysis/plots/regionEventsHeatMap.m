@@ -1,3 +1,5 @@
+%% Not recommended go to regionPlots.m and use heatMapPlotting.m function RL 8/22/25
+
 parentDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
 allEntries = dir(parentDir);
 % Filter only directories, excluding '.' and '..'

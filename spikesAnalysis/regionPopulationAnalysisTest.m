@@ -1,3 +1,5 @@
+%% Working code for analyzing the ephys properties of a region and comparing Lesion and controls
+
 parentDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
 allEntries=dir(parentDir);
 % Filter only directories, excluding '.' and '..'

@@ -24,7 +24,7 @@ for u = 1:numel(unitNames)
             keyboard
         end
     end
-
+    
     % Direction selectivity if available
     if isfield(unit, 'unitClass') && isstruct(unit.unitClass.directionDependence)
         try

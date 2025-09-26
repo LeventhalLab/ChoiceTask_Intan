@@ -62,6 +62,7 @@ for i = 1:length(regionsAvailable)
     regionFileName=fullfile(regionPath,matFileName);
     load(regionFileName);
     if strcmp(region,'cbRecipients') || strcmp(region,'cbRecipientsBroad')
+        regionUnits=combinedRegions.allUnits;
         keyboard
     end
     if strcmp(region,'x')
@@ -71,9 +72,9 @@ for i = 1:length(regionsAvailable)
     [unitTable,saveRegionFlag]=regionStatistics(regionUnits);
     
     % unitNames = fields(regionUnits);
-    if params.plotHeatMap
-        [sortedUnits, eventHeatMaps,primaryEvents,secondaryEvents]=heatMapPlotting(regionUnits,params);
-    end
+    % if params.plotHeatMap
+    %     [sortedUnits, eventHeatMaps,primaryEvents,secondaryEvents]=heatMapPlotting(regionUnits,params);
+    % end
     % if ~isfield(regionUnits,'regionSummary')
     %     regionUnits.regionSummary=struct();
     % end
@@ -81,7 +82,7 @@ for i = 1:length(regionsAvailable)
     csvFileName = fullfile(regionPath, strcat(region, '_unitTable.csv'));
     save(saveFileName, 'unitTable');
     writetable(unitTable, csvFileName);
-    disp('Unit table created moving to the plots')
+    disp('Unit table created for %s',region)
     % for b=1:length(params.behaviorField)
     %     behaviorField=params.behaviorField{b};
     %     if ~any(strcmp(unitTable.behavior, behaviorField))

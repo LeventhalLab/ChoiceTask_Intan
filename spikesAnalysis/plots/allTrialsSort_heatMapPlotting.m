@@ -1,4 +1,4 @@
-function [filteredUnitNames,eventHeatMaps,primaryEvents,secondaryEvents]=heatMapPlotting(regionUnits,params)
+function [filteredUnitNames,eventHeatMaps,primaryEvents,secondaryEvents]=allTrialsSort_heatMapPlotting(regionUnits,params)
 %% This for sure works at creating heatmaps for one behavior field. remove the for loop for multi behaviors if
 %% if it keeps on crashing RL 08/21/25
 %% Basically works for multiple behaviors but doesnt work at cuedleft/cuedright plotting (see VM for examples)
@@ -7,7 +7,13 @@ function [filteredUnitNames,eventHeatMaps,primaryEvents,secondaryEvents]=heatMap
 %region units
 behaviorField = params.behaviorField;
 behaviorFields=behaviorField;
-
+if ~isfield(params,'sortField')
+    disp('choose a behavioral feature to sort the heat maps by')
+    keyboard
+    params.sortField='';
+else
+    sortField=params.sortField;
+end
 for t=1:length(params.treatmentToProcess)
     for b=1:length(behaviorFields)
         behaviorField=behaviorFields{b};
@@ -67,16 +73,21 @@ for t=1:length(params.treatmentToProcess)
                 if ~isfield(regionUnits.(unitID),'unitMetrics')
                     keyboard
                 end
-                if ~isfield(regionUnits.(unitID).behavioralFeatures,behaviorField)
+                if ~isfield(regionUnits.(unitID).behavioralFeatures,sortField)
+                    keyboard
                     continue
                 end
-                if isfield(regionUnits.(unitID).unitMetrics.unitClass, behaviorField)
+                if isfield(regionUnits.(unitID).unitMetrics.unitClass, sortField)
                     unitClass = regionUnits.(unitID).unitMetrics.unitClass;
                     try
-                        if isfield(unitClass.(behaviorField), 'primaryEvent')
-                            primaryEvent = unitClass.(behaviorField).primaryEvent;
-                            primaryEvents{u} = primaryEvent;
-                            
+                        if isfield(unitClass.(sortField), 'primaryEvent')
+                            primaryEvent = unitClass.(sortField).primaryEvent;
+                            if ~any(strcmp(primaryEvent,fields(regionUnits.(unitID).(behaviorField))))
+                                primaryEvents{u}='unknown';
+                                eventRanks(u)=defaultRank;
+                            else
+                                primaryEvents{u} = primaryEvent;
+                            end
                             % Find rank from potentialeventNames
                             idx = find(strcmp(primaryEvent, eventOrder), 1);
                             if ~isempty(idx)
@@ -91,8 +102,8 @@ for t=1:length(params.treatmentToProcess)
                     catch ME
                         keyboard
                     end
-                    if isfield(unitClass.(behaviorField), 'secondaryEvent')
-                        secondaryEvent = unitClass.(behaviorField).secondaryEvent;
+                    if isfield(unitClass.(sortField), 'secondaryEvent')
+                        secondaryEvent = unitClass.(sortField).secondaryEvent;
                         secondaryEvents{u} = secondaryEvent;
             
                     else
@@ -101,10 +112,13 @@ for t=1:length(params.treatmentToProcess)
                     end
             
                 else
+                    keyboard
                     primaryEvents{u} = 'unknown';
                     secondaryEvents{u} = 'unknown';
                     eventRanks(u) = defaultRank;
                 end
+
+           
             end
         
         

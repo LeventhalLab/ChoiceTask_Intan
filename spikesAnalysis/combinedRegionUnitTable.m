@@ -31,9 +31,9 @@ tic
 for i = 1:length(regionsAvailable)
     region = regionsAvailable{i};
     fprintf('🔍 Working on region %s\n', region)
-    if strcmp(region,'cbRecipients') || strcmp(region, 'cbRecipientsBroad')
-        continue
-    end
+    % if strcmp(region,'cbRecipients') || strcmp(region, 'cbRecipientsBroad')
+    %     continue
+    % end
     params.region = region;
     regionPath = fullfile(parentDir, region);
     params.regionSummaryPath = regionPath;

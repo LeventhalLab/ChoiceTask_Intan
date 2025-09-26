@@ -1,3 +1,4 @@
+%% Plots the proportion of tone events and adds t
 function plotToneEventProportionsByRegion(allUnits, behaviorField)
 
 % Filter to exclude lesion units and include only desired behavior

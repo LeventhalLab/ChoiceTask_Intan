@@ -3,7 +3,7 @@
 %scored value, this is considered the primary event. See gaidica leventhal
 %et al 2018
 parentDir = 'X:\Neuro-Leventhal\data\ChoiceTask\RegionalSummary';
-processSpecificSessions=1;% do you want to only process a specific subset of sessions?
+processSpecificSessions=0;% do you want to only process a specific subset of sessions?
 removeOldUnits=0; %do you want to remove the units from this session that were previously processed?
 if processSpecificSessions
     sessions_to_process={'R0465_20230420a',	'R0544_20240625a',	'R0544_20240626a',	'R0544_20240627a',	'R0544_20240628b',	'R0544_20240701a',	'R0544_20240702a',	'R0544_20240703a',	'R0544_20240708a',	'R0544_20240709b',	'R0544_20240710a',...

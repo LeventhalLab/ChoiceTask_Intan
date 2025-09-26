@@ -44,9 +44,10 @@ summary_xls_dir = 'X:\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
 sessions_to_ignore = {'R0378_20210507a', 'R0326_20191107a', 'R0425_20220728a', 'R0425_20220816b', 'R0427_20220920a','R0427_20220919a','R0479_20230601a',}; % 'R0493_20230720a' R0425_20220728a debugging because the intan side was left on for 15 hours;
 
-processSpecificSessions=1;% do you want to only process a specific subset of sessions?
+processSpecificSessions=0;% do you want to only process a specific subset of sessions?
 removeOldUnits=0; %do you want to remove the units from this session that were previously processed?
 if processSpecificSessions
+    warning('processing specific sessions only!!')
     sessions_to_process={'R0465_20230420a',	'R0544_20240625a',	'R0544_20240626a',	'R0544_20240627a',	'R0544_20240628b',	'R0544_20240701a',	'R0544_20240702a',	'R0544_20240703a',	'R0544_20240708a',	'R0544_20240709b',	'R0544_20240710a',...
     'R0544_20240711a',	'R0546_20240715a',	'R0546_20240716a',	'R0546_20240717a',	'R0572_20240924a',	'R0545_20250113a'};
     ratsToReprocess={'R0465','R0544','R0545','R0546','R0572'};
@@ -78,24 +79,24 @@ plotACG=true;
 kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertVersion=4. Otherwise it does not matter. 
 gain_to_uV = 0.195;
 binSize=0.02; %Psth
-ignoreTheseRegions=0; % do you specifically want to ignore some regions?
-ignoreRegions={'AHP','PLH','PaPo','SubI','VL'};
-%regionOfinterest={'AHP','LH','Mt','Mt/VM','PLH','PaPo','PefLH','PefLH/LH','Rt','Rt/VA','Rt/ns','SubI',...
-    % 'VA/VPL/VM','VM/VL','VM/VL/VPL','ZI/VM','ZI/SubI'};
-behaviorA={'wrong','cued_left'};
-behaviorAname='wrong_cuedleft';
-behaviorB={'correct','cuedleft'};
-behaviorBname='correct_cuedleft';
-behaviorC={'correct','cuedright'};
-behaviorCname='correct_cuedright';
-behaviorD={'cuedleft','slowmovement'};
-behaviorDname='cuedleft_slowmovement';
-behaviorE={'cuedleft','slowreaction'};
-behaviorEname='cuedleft_slowreaction';
-behaviorF={'cuedleft','moveright'};
-behaviorFname='cuedleft_moveright';
-behaviorG={'cuedright','wrong'};
-behaviorGname='cuedright_wrong';
+ignoreTheseRegions=1; % do you specifically want to ignore some regions?
+ignoreRegions={'Rt-VA','VM','cbRecipients','cbRecipientsBroad'};
+% regionOfinterest={'Rt/VA','Rt/ns','SubI',...
+%     'VA/VPL/VM','VM/VL','VM/VL/VPL','ZI/VM','ZI/SubI'};
+behaviorA={'moveleft'};
+behaviorAname='moveleft';
+behaviorB={'correct'};
+behaviorBname='correct';
+behaviorC={'moveright'};
+behaviorCname='moveright';
+behaviorD={'alltrials'};
+behaviorDname=['alltrials'];
+behaviorE={'correct','cuedleft'};
+behaviorEname=['correct_cuedleft'];
+behaviorF={'correct','cuedright'};
+behaviorFname=['correct_cuedright'];
+behaviorG={'wrong'};
+behaviorGname=['wrong'];
 outputTitle=[];
 %include only this region- true: include overlap regions=false currently not working
 regionSpecific=true;
@@ -121,6 +122,7 @@ wholeSetTimer=tic;
 T=zeros(1,length(regionsAvailable));
 for r=1:length(regionsAvailable)
     regionOfinterest=regionsAvailable{r};
+    
     if ignoreTheseRegions
         if any(strcmp(regionOfinterest,ignoreRegions))
             T(r)=[];

@@ -1,4 +1,4 @@
-function primaryEventsProportionBarGraph(unitTable, params, behaviorField)
+function primaryEventsProportionBarGraph(unitTable, params, behaviorField,selectivityEvent)
 % Plot proportion of primary events per treatment and annotate with significance
 
 savePath = params.regionSummaryPath;
@@ -10,8 +10,8 @@ safeBehaviorField = regexprep(behaviorField, '[^\w]', '_');
 filteredTable = unitTable(strcmp(unitTable.behavior, behaviorField), :);
 if isfield(params, 'controlSelectivityFilter')
     isControl = strcmp(filteredTable.treatment, 'control');
-    filter=params.controlSelectivityFilter;
-    isSelectivityMatch = strcmp(filteredTable.directionSelectivity, params.controlSelectivityFilter);
+    filter=selectivityEvent;
+    isSelectivityMatch = strcmp(filteredTable.directionSelectivity, selectivityEvent);
     keepControl = isControl & isSelectivityMatch;
 
     isLesion = strcmp(filteredTable.treatment, 'lesion');
@@ -89,8 +89,9 @@ ylim([0, min(1, max(proportions(:), [], 'omitnan') + 0.15)]);
 
 % Save figure
 if isfield(params,'controlSelectivityFilter')
-    outFile = fullfile(savePath, [safeBehaviorField '_' filter '_controlsOnlyVsLesion' '_PrimaryEventProportionsIpsilateral.png']);
+    outFile = fullfile(savePath, [safeBehaviorField '_' filter '_controlsVsLesion_' selectivityEvent '_PrimaryEventProportions.png']);
 else
+    keyboard
     outFile = fullfile(savePath, [safeBehaviorField  '_allControlsVsLesionPrimaryEventProportions.png']);
 end
 saveas(fig, outFile);

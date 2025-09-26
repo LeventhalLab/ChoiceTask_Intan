@@ -13,7 +13,7 @@ params={};
 params.potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
 % lesion or control?
 params.treatmentToProcess='control';
-combinedRegionName='cbRecipients';
+combinedRegionName='cbRecipientsBroad';
 regionsToCombine={'VL','VL-VPL','VL-VPL-VPM'};
 plotHeatMap=0;
 % Specify the behavior we are interested in plotting for heat map
