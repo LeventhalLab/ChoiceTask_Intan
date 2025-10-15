@@ -44,7 +44,7 @@ summary_xls_dir = 'X:\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
 sessions_to_ignore = {'R0378_20210507a', 'R0326_20191107a', 'R0425_20220728a', 'R0425_20220816b', 'R0427_20220920a','R0427_20220919a','R0479_20230601a',}; % 'R0493_20230720a' R0425_20220728a debugging because the intan side was left on for 15 hours;
 
-processSpecificSessions=0;% do you want to only process a specific subset of sessions?
+processSpecificSessions=1;% do you want to only process a specific subset of sessions?
 removeOldUnits=0; %do you want to remove the units from this session that were previously processed?
 if processSpecificSessions
     warning('processing specific sessions only!!')
@@ -80,7 +80,7 @@ kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertV
 gain_to_uV = 0.195;
 binSize=0.02; %Psth
 ignoreTheseRegions=1; % do you specifically want to ignore some regions?
-ignoreRegions={};
+ignoreRegions={'Rt-VA','VM','cbRecipients','cbRecipientsBroad'};
 % regionOfinterest={'Rt/VA','Rt/ns','SubI',...
 %     'VA/VPL/VM','VM/VL','VM/VL/VPL','ZI/VM','ZI/SubI'};
 behaviorA={'alltrials'};
@@ -94,11 +94,12 @@ behaviorDname=[];
 behaviorE={};
 behaviorEname=[];
 behaviorF={};
-behaviorFname=[];
-behaviorG={};
-behaviorGname=[];
+behaviorFname=[rect_cuedright'];
+behaviorG={'wrong'};
+behaviorGname=['wrong'];
 outputTitle=[];
-
+%include only this region- true: include overlap regions=false currently not working
+regionSpecific=true;
 
 %% Clear out unused behaviors
 allFeatures={behaviorA,behaviorB,behaviorC,behaviorD,behaviorE,behaviorF,behaviorG};
@@ -361,10 +362,10 @@ for r=1:length(regionsAvailable)
                              if ~isfield(regionUnits.(unitID), 'behavioralFeatures')
                                         regionUnits.(unitID).behavioralFeatures=struct();
                              end
-                             % if ~any(~isfield(regionUnits.(unitID).behavioralFeatures,trialfeatureList))
-                             %    disp('this unit has already been processed continuing')
-                             %    continue
-                             % end
+                             if ~any(~isfield(regionUnits.(unitID).behavioralFeatures,trialfeatureList))
+                                disp('this unit has already been processed continuing')
+                                continue
+                             end
                              for i=1:length(trialfeatureList)
                                     
                                     trialfeatures=trialfeatureList{i};

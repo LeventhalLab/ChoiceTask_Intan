@@ -3,49 +3,45 @@ function [filteredUnitNames,eventHeatMaps,primaryEvents,secondaryEvents]=heatMap
 %% field 
 
 behaviorField = params.behaviorField;
-behaviorFields=behaviorField;
 
-
-    for b=1:length(behaviorFields)
-        behaviorField=behaviorFields{b};
-        if isfield(params, 'excludeNonSelectiveUnits')
-            excludeNonSelectiveUnits=params.excludeNonSelectiveUnits; %1 recommended
-        else
-            excludeNonSelectiveUnits=0;
-        end
-        if isfield(params, 'excludeSelectiveUnits')
-            excludeSelectiveUnits=params.excludeSelectiveUnits; %0 recommended
-        else
-            excludeSelectiveUnits=0;
-        end
-        if isfield(params,'excludeUndeterminable')
-            excludeUndeterminable=params.excludeUndeterminable; %1 recommended
-        else
-            excludeUndeterminable=0;
-        end
-        if isfield(params,'excludeContralateral')
-            excludeContralateral=params.excludeContralateral;
-        else
-            excludeContralateral=0;
-        end
-        if isfield(params, 'excludeIpsilateral')
-            excludeIpsilateral=params.excludeIpsilateral;
-        else
-            excludeIpsilateral=0;
-        end
-        if isfield(params,'excludeNonResponsive')
-            excludeNonResponsive=params.excludeNonResponsive;
-        else
-            excludeNonResponsive=0;
-        end
-        zScale=params.zScale;
-        useAbsoluteZ=params.useAbsoluteZ;
-        potentialeventNames=params.potentialeventNames;
-        treatmentToProcess=params.treatmentToProcess;
-        region=params.region;
-        subPlotTitle=params.heatMapTitle;
-        savePath=params.regionSummaryPath;
-        
+if isfield(params, 'excludeNonSelectiveUnits')
+    excludeNonSelectiveUnits=params.excludeNonSelectiveUnits; %1 recommended
+else
+    excludeNonSelectiveUnits=0;
+end
+if isfield(params, 'excludeSelectiveUnits')
+    excludeSelectiveUnits=params.excludeSelectiveUnits; %0 recommended
+else
+    excludeSelectiveUnits=0;
+end
+if isfield(params,'excludeUndeterminable')
+    excludeUndeterminable=params.excludeUndeterminable; %1 recommended
+else
+    excludeUndeterminable=0;
+end
+if isfield(params,'excludeContralateral')
+    excludeContralateral=params.excludeContralateral;
+else
+    excludeContralateral=0;
+end
+if isfield(params, 'excludeIpsilateral')
+    excludeIpsilateral=params.excludeIpsilateral;
+else
+    excludeIpsilateral=0;
+end
+if isfield(params,'excludeNonResponsive')
+    excludeNonResponsive=params.excludeNonResponsive;
+else
+    excludeNonResponsive=0;
+end
+zScale=params.zScale;
+useAbsoluteZ=params.useAbsoluteZ;
+potentialeventNames=params.potentialeventNames;
+treatmentToProcess=params.treatmentToProcess;
+region=params.region;
+subPlotTitle=params.heatMapTitle;
+savePath=params.regionSummaryPath;
+badIDs=params.badAllTrialsIDs;       
         % -----------------------------------------------------------------
         % STEP 1: build filteredUnitNames up front (apply all params filters)
         % -----------------------------------------------------------------
@@ -54,7 +50,7 @@ behaviorFields=behaviorField;
         for uu = 1:length(unitNames)
             uid = unitNames{uu};
             % skip non-unit fields
-            if ~startsWith(uid,'R')
+            if ~startsWith(uid,'R') && (params.combinedRegionFlag==0)
                 continue
             end
             if ~isfield(regionUnits.(uid),'unitMetrics')
@@ -63,7 +59,9 @@ behaviorFields=behaviorField;
             if ~isfield(regionUnits.(uid).behavioralFeatures, behaviorField)
                 continue
             end
-            
+            if any(strcmp(uid,badIDs)) && strcmp(behaviorField,'alltrials')
+                continue
+            end
             unit = regionUnits.(uid);
             % handle unitClass availability
             if ~isfield(unit,'unitMetrics') || ~isfield(unit.unitMetrics,'unitClass')
@@ -184,7 +182,9 @@ behaviorFields=behaviorField;
         eventHeatMaps = struct();
         for uu = 1:length(filteredUnitNames)
             unitID = filteredUnitNames{uu};
-            if ~startsWith(unitID,'R'), continue; end
+            if~startsWith(uid,'R') && (params.combinedRegionFlag==0)
+                continue
+            end
             behavioralFeatures = regionUnits.(unitID).behavioralFeatures;
             if ~isfield(behavioralFeatures,behaviorField)
                 continue
@@ -227,6 +227,7 @@ behaviorFields=behaviorField;
                         else
                             nCols = size(eventHeatMaps.(eventName),2);
                         end
+                        
                         warning('Failed to append data for %s in unit %s, padding with NaNs', ...
                             eventName, unitID);
                         eventHeatMaps.(eventName) = [eventHeatMaps.(eventName); nan(1,nCols)];
@@ -244,7 +245,8 @@ behaviorFields=behaviorField;
         % -----------------------------------------------------------------
         timeBins = linspace(-1, 1, 101);
         unitNamesPlot = filteredUnitNames;
-        figure('Name', ['Event Heatmaps for- ' region], 'NumberTitle', 'off');
+        f=figure('Name', ['Event Heatmaps for- ' region], 'NumberTitle', 'off','Units', 'inches', ...
+       'Position', [1 1 11 8.5]);
         
         % ensure event tiles are in potentialeventNames order
         eventNames = fields(eventHeatMaps);
@@ -253,11 +255,11 @@ behaviorFields=behaviorField;
         eventNames = eventNames(sortOrder);
         numEvents = length(eventNames);
         if numEvents==0
-            
             filteredUnitNames=[];
             primaryEvents=[];
             secondaryEvents=[];
             eventHeatMaps=[];
+            close(f)
             return
         end
         try
@@ -267,8 +269,10 @@ behaviorFields=behaviorField;
             return
         end
         
-        behaviorTitle=strrep(behaviorField,'_',' ');
-        title(t, ['Treatment= ' treatmentToProcess ' Z-scored Event Heatmaps for "' behaviorTitle '" in Region: ' region ]);
+       
+        sgtitle(t, sprintf('Treatment = %s | Behavior = %s | Region = %s ', ...
+                    treatmentToProcess, strrep(behaviorField,'_',' '), region), ...
+                    'FontSize', 12, 'Interpreter', 'none');        
         subtitle(t,subPlotTitle)
         min_z = Inf;
         max_z = -Inf;
@@ -335,12 +339,14 @@ behaviorFields=behaviorField;
         if ~exist(savePath, 'dir')
             mkdir(savePath);  % Create directory if needed
         end
-        strrep(subPlotTitle,' ','_');
-        figFileName = fullfile(savePath, [treatmentToProcess '_eventHeatmaps_' behaviorField '_' region '_' subPlotTitle '.png']);
-        saveas(gcf, figFileName);
-        if ~params.viewplots
-            close;
-        end
-    end
+        subPlotTitle=strrep(subPlotTitle,' ','_');
+        pngFileName = fullfile(savePath, [treatmentToProcess '_eventHeatmaps_' behaviorField '_' region '_' subPlotTitle '.png']);
+        figFileName = fullfile(savePath, [treatmentToProcess '_eventHeatmaps_' behaviorField '_' region '_' subPlotTitle '.fig']);
+        saveas(f, figFileName);
+        saveas(f, pngFileName);
+       
+        close(f);
+       
+   
     
 end

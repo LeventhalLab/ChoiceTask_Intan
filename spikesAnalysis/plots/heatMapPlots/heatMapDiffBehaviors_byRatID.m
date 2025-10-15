@@ -12,18 +12,22 @@ treatmentToProcess = params.treatmentToProcess;
 region = params.region;
 subPlotTitle = params.heatMapTitle;
 
-%savePath = params.regionSummaryPath;
-
-%% === STEP 1: Create filteredUnitNames based on params ===
-filteredUnitNames = {};
 unitNames = fields(regionUnits);
 ratIDs = cellfun(@(x) extractBefore(x, '_'), unitNames, 'UniformOutput', false);
-for r=1:length(unique(ratIDs))
-    ratID=ratIDs{r};
-    if ~startsWith(ratID,'R')
+
+for r = 1:length(unique(ratIDs))
+    ratID = ratIDs{r};
+    if~startsWith(ratID,'R') && (params.combinedRegionFlag==0)
         continue
     end
-    savePath=fullfile(params.regionSummaryPath,ratID);
+    savePath = fullfile(params.regionSummaryPath,ratID);
+
+    % Reset per-rat variables here
+    filteredUnitNames = {};
+    primaryEvents = {};
+    eventHeatMaps = struct();
+
+    %% === STEP 1: Create filteredUnitNames based on params ===
     for u = 1:length(unitNames)
         uid = unitNames{u};
         
@@ -75,7 +79,6 @@ for r=1:length(unique(ratIDs))
     %% === STEP 2: Compute primaryEvents and sort by BehaviorA ===
     eventOrder = potentialeventNames;
     defaultRank = length(eventOrder)+1;
-    primaryEvents = cell(size(filteredUnitNames));
     eventRanks = zeros(size(filteredUnitNames));
     
     for u = 1:length(filteredUnitNames)
@@ -103,7 +106,6 @@ for r=1:length(unique(ratIDs))
     primaryEvents = primaryEvents(sortIdx);
     
     %% === STEP 3: Compute difference heatmaps ===
-    eventHeatMaps = struct();
     timeBins = linspace(-1,1,101);
     
     for u = 1:length(filteredUnitNames)
@@ -139,7 +141,8 @@ for r=1:length(unique(ratIDs))
     end
     
     %% === STEP 4: Plot heatmaps with primary/secondary ticks ===
-    figure('Name',['Diff Heatmaps ' region],'NumberTitle','off');
+    f=figure('Name',['Diff Heatmaps ' region ' Rat ' ratID],'NumberTitle','off','Units', 'inches', ...
+       'Position', [1 1 11 8.5]);
     eventNames = fields(eventHeatMaps);
     
     [~, sortOrder] = ismember(potentialeventNames, eventNames);
@@ -148,11 +151,12 @@ for r=1:length(unique(ratIDs))
     numEvents = length(eventNames);
     if numEvents==0
         fprintf('unable to compare zscored values between %s and %s for rat %s',behaviorA,behaviorB,ratID)
+        close(f);
         continue
     end
     t = tiledlayout(1,numEvents,'TileSpacing','Tight','Padding','None');
-    title(t, sprintf('Treatment = %s | Diff (%s - %s) Heatmaps in Region: %s for rat %s', ...
-        treatmentToProcess, behaviorA, behaviorB, region, ratID));
+    sgtitle(t, sprintf('Treatment = %s | zDiff (%s - %s) | Region: %s | Rat: %s', ...
+        treatmentToProcess, behaviorA, behaviorB, region, ratID),'FontSize', 12, 'Interpreter', 'none');
     subtitle(t,subPlotTitle)
     for j = 1:numEvents
         eventName = eventNames{j};
@@ -192,12 +196,13 @@ for r=1:length(unique(ratIDs))
     
     %% === STEP 5: Save figure ===
     if ~exist(savePath,'dir'), mkdir(savePath); end
-    strrep(subPlotTitle,' ','_');
-    figFileName = fullfile(savePath, sprintf('%s_diffHeatmaps_%s_%s_%s_%s_%s.png',treatmentToProcess,behaviorA,behaviorB,region,ratID,subPlotTitle));
-    saveas(gcf, figFileName);
-    if ~params.viewplots
-        close;
-    end
+    subPlotTitle=strrep(subPlotTitle,' ','_');
+    figFileName = fullfile(savePath, sprintf('%s_diffHeatmaps_%s_%s_%s_%s_%s.fig',treatmentToProcess,behaviorA,behaviorB,region,ratID,subPlotTitle));
+    saveas(f, figFileName);
+    pngFileName = fullfile(savePath, sprintf('%s_diffHeatmaps_%s_%s_%s_%s.png',treatmentToProcess,behaviorA,behaviorB,region,subPlotTitle));
+    saveas(f, pngFileName);
+    close(f);
+    
 end 
 return
 end

@@ -3,33 +3,34 @@ allEntries = dir(parentDir);
 % Filter only directories, excluding '.' and '..'
 isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
 regionsAvailable = {allEntries(isSubFolder).name};
-%% Input Parameters
+%% Input Parameters %%
 params={};
 
-% do not change
-params.potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
-% lesion or control?
+%% do not change
+params.potentialeventNames={'cueOn','centerIn','tone','centerOut','sideIn','sideOut','foodClick','foodRetrieval','wrong','houseLightOn'};
+%% lesion or control?
 params.treatmentsToProcess={'control','lesion'};
 params.treatmentFilter='control';
-% Specify the single behaviors we are interested in plotting for heat map
-params.behaviorField = {'alltrials','correct'};%,'moveleft','moveright','wrong'};
-%--Units that are not directionally selective
+%% Specify the single behaviors we are interested in plotting for heat map
+params.behaviorFields = {'alltrials','correct','moveright','moveleft','correct_cuedleft','correct_cuedright'};%,'moveleft','moveright','wrong'};
+%% --Units that are not directionally selective
 params.excludeNonSelectiveUnits=0; % 1 recommended if running controls
-%--Units that are directionally selective usually
+%% --Units that are directionally selective usually
 params.excludeSelectiveUnits=0; %0 recommended for all cases
- %--Units where selectivity could not be determined due to failed shuffle test 
+ %% --Units where selectivity could not be determined due to failed shuffle test 
 params.excludeUndeterminable=0;%1 recommended for controls
-%--Units that are contralaterally selective (move left selective)
+%% --Units that are contralaterally selective (move left selective)
 params.excludeContralateral=0;
-%--Units that are ipsilaterally selective (move right selective)
+%% --Units that are ipsilaterally selective (move right selective)
 params.excludeIpsilateral=0;
-%--Units that are not responsive to events 
-%(z-score doesn't exceed 1)
+%% --Units that are not responsive to events z-score doesn't exceed 1)
 params.excludeNonResponsive=1;
-%Gaidica leventhal '18 used [-.5 2] inspect data
+%% Gaidica leventhal '18 used [-.5 2] inspect data
 params.zScale=[-2 2];
-
-%% behaviorA-behaviorB %%
+%% do you want to process specific region?
+specifyRegions=0;
+regionsOfInterest={'cbRecipients','cbRecipientsBroad'}; 
+%% for plotting the difference in zscore values of behaviorA-behaviorB  %%
 params.heatMapBehaviorA='moveleft';
 params.heatMapBehaviorB='moveright';
 params.sortField='moveleft';
@@ -55,32 +56,64 @@ params.viewplots=0;%to make your computer happy
 % 
 % title(t, 'Direction Selectivity of Control Units by Region');tic
 ignoreRegions={};
+params.badAllTrialsIDs={'R0544_20240626a_Unit_70_Treatment_lesion', 'R0544_20240625a_Unit_64_Treatment_lesion', 'R0544_20240626a_Unit_76_Treatment_lesion',... 
+    'R0544_20240628b_Unit_86_Treatment_lesion', 'R0544_20240627a_Unit_64_Treatment_lesion,' ...
+    ' R0544_20240628b_Unit_87_Treatment_lesion', ' R0544_20240701a_Unit_291_Treatment_lesion', ...
+    ' R0544_20240702a_Unit_122_Treatment_lesion', ' R0544_20240703a_Unit_321_Treatment_lesion', ...
+    ' R0544_20240709b_Unit_85_Treatment_lesion', ' R0544_20240711a_Unit_122_Treatment_lesion',' R0572_20240924a_Unit_10_Treatment_lesion', ...
+    ' R0572_20240924a_Unit_14_Treatment_lesion', ' R0572_20240924a_Unit_24_Treatment_lesion',...
+    ' R0572_20240924a_Unit_30_Treatment_lesion',' R0572_20240924a_Unit_36_Treatment_lesion',...
+    ' R0572_20240924a_Unit_42_Treatment_lesion',' R0545_20250113a_Unit_67_Treatment_lesion',... 
+    ' R0545_20250113a_Unit_96_Treatment_lesion',  ' R0545_20250113a_Unit_83_Treatment_lesion'};
+
 for i = 1:length(regionsAvailable)
     region = regionsAvailable{i};
     if any(strcmp(region,ignoreRegions))
         continue
     end
+    if specifyRegions
+        if ~any(strcmp(region,regionsOfInterest))
+            fprintf('processing specific regions based on params so skipping %s\n',region)
+            continue
+        end
+    end
     fprintf('Working on region %s\n',region)
     params.region=region;
     regionPath = fullfile(parentDir, region);
     params.regionSummaryPath=regionPath;
-   
+    params.combinedRegionFlag=0;
+    load(fullfile(regionPath, strcat(region,'_unitSummary.mat')))
     for t=1:length(params.treatmentsToProcess)
             params.treatmentToProcess=params.treatmentsToProcess{t};
             disp('loading summary mat file this may take some time...')
-            load(fullfile(regionPath, strcat(region,'_unitSummary.mat')))
             if exist('combinedRegions') && isstruct(combinedRegions)
-                keyboard
+                
                 regionUnits=combinedRegions.allUnits;
+                params.combinedRegionFlag=1;
             end
-            [filteredUnitNames,eventHeatMaps,primaryEvents,secondaryEvents]=heatMapPlotting2(regionUnits,params);
-            if isempty(filteredUnitNames)
-                fprintf('No valid %s units in %s',params.treatmentToProcess,region)
-                continue
+            for b=1:length(params.behaviorFields)
+                params.behaviorField=params.behaviorFields{b};
+                [filteredUnitNames,eventHeatMaps,primaryEvents,secondaryEvents]=heatMapPlotting2(regionUnits,params);
+                if isempty(filteredUnitNames)
+                    fprintf('No valid %s units in %s',params.treatmentToProcess,region)
+                    continue
+                end
+                if params.combinedRegionFlag==1
+                    keyboard
+                    % heatMapPlotting_byRatID(regionUnits,params);
+                    % heatMapDiffBehaviors_byRatID(regionUnits,params);
+                else
+                    heatMapPlotting_byRatID(regionUnits,params);
+                end
             end
             [filteredUnitNames_diffBehaviors,eventHeatMaps_diffBehaviors,primaryEvents_diffBehaviors]=heatMapDiffBehaviors(regionUnits,params);
-            heatMapPlotting_byRatID(regionUnits,params);
-            heatMapDiffBehaviors_byRatID(regionUnits,params);
+            if params.combinedRegionFlag==1
+                keyboard
+                % heatMapPlotting_byRatID(regionUnits,params);
+                % heatMapDiffBehaviors_byRatID(regionUnits,params);
+            else
+                heatMapDiffBehaviors_byRatID(regionUnits,params);
+            end
             fprintf('heat maps created for %s units in %s',params.treatmentToProcess,region)
     end
     disp('all heat maps created for all beahviors and rat ids')

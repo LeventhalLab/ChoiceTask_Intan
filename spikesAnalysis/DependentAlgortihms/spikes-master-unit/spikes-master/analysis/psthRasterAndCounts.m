@@ -1,23 +1,49 @@
-function [psth, bins, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(spikeTimes, eventTimes, window, psthBinSize)
-% function [psth, bins, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(spikeTimes, eventTimes, window)
-%
+function [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(spikeTimes, eventTimes, window, psthBinSize)
+% function [psth, bins, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(clusterspikes, ts, window)
+% function to generate psth (spike/bin, Hz, zscored) and raster data to be
+% plotted. 
+% Inputs: 
+% spikeTimes typically cluster_spikes(N, :)'
+% eventTimes: typically ts varaible from ts from trial function (event
+% timestamps) 
+% cluster_spikes is in ms and ts is in sec, conversion included in line 27
+
 % Fast computation of psth and spike counts in a window relative to some
 % events. Also returns rasters you can plot. 
-%
 % Notes on inputs:
 % - eventTimes is nEvents x 1
 % - window is length 2, e.g. [-0.1 0.3] for a window from -0.1 to +0.3 sec
 % relative to events. 
-%
+% spikeTimes is cluster_spikes (converted to second in line 21) and must be
+% (cluster_spikes(1, :)' 
+% eventTimes is ts (already in sec)
+% psthBinSize is in sec
+
 % Notes on outputs:
 % - psth can be plotted with plot(bins, psth);
 % - rasters can be plotted with plot(rasterX, rasterY);
 % - spikeCounts is nEvents x 1, where each entry is the number of spikes
 % that occurred within the window around that event. 
+% 
+spikeTimes = spikeTimes/1000;
 
+eventTimes=sort(eventTimes,'ascend');
+keepEventIndices = true(size(eventTimes));
 
-nRanges = size(eventTimes,1);
+% Loop through the eventTimes and remove events that are too close to the previous one
+try
+    for i = 2:length(eventTimes)
+        if eventTimes(i) - eventTimes(i-1) < window(2)
+            %keyboard
+            keepEventIndices(i) = false; % Mark this event for removal
+        end
+    end
+catch ME
+    keyboard
+end
+eventTimes=eventTimes(keepEventIndices);
 ranges = [eventTimes+window(1) eventTimes+window(2)];
+nRanges = size(eventTimes,1);
 rangeLabel = 1:nRanges;
 
 % wr will have one entry per spike, corresponding to an integer identifying
@@ -28,9 +54,14 @@ stIn = spikeTimes(wr>0); wr = wr(wr>0); % pick just the spikes and range indices
 stRelToEvent = stIn-eventTimes(wr); % subtract the event time corresponding to each spike
 
 
-[psth,bins] = hist(stRelToEvent, [window(1):psthBinSize:window(2)]);
+[psth,bins] = hist(stRelToEvent, [window(1):psthBinSize:window(2)]); 
 
+% binWidthInSeconds = psthBinSize*1000; % Define bin width in seconds
+psthHz = (psth ./ psthBinSize)/(length(eventTimes)); % Convert spike counts to firing rates in Hz
+%Smoothing done using 3 point moving average
+psthHz = movmean(psthHz, 3);
 
+%Generate Rasters
 [rasterX,yy] = rasterize(stRelToEvent); 
 rasterY = yy+reshape(repmat(wr,3,1),1,length(wr)*3); % yy is of the form [0 1 NaN 0 1 NaN...] so just need to add trial number to everything
 
@@ -41,4 +72,12 @@ spikeCounts = zeros(1, nRanges);
 % spikes of the next. The distance between these breaks are the spike counts
 % Find gives you the indices of these breaks, outer diff computes how many in
 % each.
-spikeCounts(ismember(1:nRanges,wr)) = diff(find(diff([0 wr nRanges+1])>0)); 
+% try 
+spikeCounts(ismember(1:nRanges,wr)) = diff(find(diff([0 wr nRanges+1])>0));
+% catch ME
+%     if contains(ME.message, "Unable to perform assignment because the left and right sides have a different number of elements")
+%         keyboard
+%     else
+%         rethrow(ME)
+%     end
+% end

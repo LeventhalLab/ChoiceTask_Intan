@@ -16,11 +16,18 @@ for i=1:length(eventNames)
     
     %remove any events that don't exist or contain nans for this trial feature type and
     %create data structure
-    if any(isnan(ts)) || any(ts==0)
-        continue
+    if ~contains(trialfeatures,'alltrials')
+        if any(isnan(ts)) || any(ts==0)
+            continue
+        else
+            ts_data.(event_name)=ts;
+            valid_eventNames{end+1} = event_name;
+        end 
     else
+        ts = ts(~isnan(ts) & ts ~= 0);
         ts_data.(event_name)=ts;
-        valid_eventNames{end+1} = event_name;
-    end      
+        valid_eventNames{end+1}=event_name;
+    end
+    
 
 end

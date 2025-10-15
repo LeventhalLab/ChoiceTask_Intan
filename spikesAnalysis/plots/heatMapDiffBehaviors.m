@@ -27,7 +27,7 @@ for u = 1:length(unitNames)
     uid = unitNames{u};
     
     % Only process units that start with 'R'
-    if ~startsWith(uid,'R')
+    if~startsWith(uid,'R') && (params.combinedRegionFlag==0)
         continue
     end
     
@@ -37,7 +37,9 @@ for u = 1:length(unitNames)
     if ~isfield(unit,'unitMetrics')
         continue
     end
-    
+    if ~strcmp(unit.unitMetrics.treatement, treatmentToProcess)
+        continue
+    end
     unitClass = unit.unitMetrics.unitClass;
     directionDependence = unitClass.directionDependence;
     
@@ -136,7 +138,8 @@ for u = 1:length(filteredUnitNames)
 end
 
 %% === STEP 4: Plot heatmaps with primary/secondary ticks ===
-figure('Name',['Diff Heatmaps ' region],'NumberTitle','off');
+f=figure('Name',['Diff Heatmaps ' region],'NumberTitle','off','Units', 'inches', ...
+       'Position', [1 1 11 8.5]);
 eventNames = fields(eventHeatMaps);
 [~, sortOrder] = ismember(potentialeventNames, eventNames);
 sortOrder(sortOrder==0) = []; % remove any events not present
@@ -147,11 +150,12 @@ if numEvents==0
     eventHeatMaps=[];
     primaryEvents=[];
     fprintf('unable to compare zscored values between %s and %s in %s',behaviorA,behaviorB,region)
+    close(f);
     return
 end  
 t = tiledlayout(1,numEvents,'TileSpacing','Tight','Padding','None');
-title(t, sprintf('Treatment = %s | Diff (%s - %s) Heatmaps in Region: %s', ...
-    treatmentToProcess, behaviorA, behaviorB, region));
+sgtitle(t, sprintf('Treatment = %s | zDiff (%s - %s) | Region: %s', ...
+    treatmentToProcess, behaviorA, behaviorB, region),'FontSize', 12, 'Interpreter', 'none');
 subtitle(t,subPlotTitle)
 for j = 1:numEvents
     eventName = eventNames{j};
@@ -161,8 +165,15 @@ for j = 1:numEvents
     imagesc(timeBins, 1:size(zscoredData,1), zscoredData);
     colormap(ax,'jet');
     clim(ax,zScale);
-    xlabel(ax,'Time (s)');
-    ylabel(ax,'Unit #');
+    if j==1
+        xlabel(ax, 'Time (s)');
+        ylabel(ax, 'Unit #');
+    elseif j==max(numEvents)
+        colorbar(ax);
+        yticks([]); xticks([]); 
+    else
+        yticks([]); xticks([]); 
+    end
     title(ax,eventName,'Interpreter','none');
     
     % === Add primary/secondary event ticks from BehaviorA ===
@@ -181,20 +192,17 @@ for j = 1:numEvents
         end
     end
     
-    if j==numEvents
-        colorbar(ax);
-    else
-        yticks([]);
-        xticks([]);
-    end
+     
 end
 
 %% === STEP 5: Save figure ===
 if ~exist(savePath,'dir'), mkdir(savePath); end
-strrep(subPlotTitle,' ','_');
-figFileName = fullfile(savePath, sprintf('%s_diffHeatmaps_%s_%s_%s_%s.png',treatmentToProcess,behaviorA,behaviorB,region,subPlotTitle));
-saveas(gcf, figFileName);
-if ~params.viewplots
-    close;
-end
+subPlotTitle=strrep(subPlotTitle,' ','_');
+figFileName = fullfile(savePath, sprintf('%s_diffHeatmaps_%s_%s_%s_%s.fig',treatmentToProcess,behaviorA,behaviorB,region,subPlotTitle));
+saveas(f, figFileName);
+pngFileName = fullfile(savePath, sprintf('%s_diffHeatmaps_%s_%s_%s_%s.png',treatmentToProcess,behaviorA,behaviorB,region,subPlotTitle));
+saveas(f, pngFileName);
+
+close(f);
+
 end

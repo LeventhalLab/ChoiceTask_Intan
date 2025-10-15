@@ -219,7 +219,8 @@ for t=1:length(params.treatmentToProcess)
         % Now that we have collected zscoredHz values for each event, plot the heatmap for each event
         timeBins = linspace(-1, 1, 101);
         unitNames=filteredUnitNames;
-        figure('Name', ['Event Heatmaps for- ' region], 'NumberTitle', 'off');
+        figure('Name', ['Event Heatmaps for- ' region], 'NumberTitle', 'off','Units', 'inches', ...
+            'Position', [1 1 11 8.5]);
         eventNames = fields(eventHeatMaps);
         numEvents = length(eventNames);
         try
