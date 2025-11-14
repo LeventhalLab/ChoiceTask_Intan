@@ -12,7 +12,7 @@ params.potentialeventNames={'cueOn','centerIn','tone','centerOut','sideIn','side
 params.treatmentsToProcess={'control','lesion'};
 params.treatmentFilter='control';
 %% Specify the single behaviors we are interested in plotting for heat map
-params.behaviorFields = {'alltrials','correct','moveright','moveleft','correct_cuedleft','correct_cuedright'};%,'moveleft','moveright','wrong'};
+params.behaviorFields = {'correct'};
 %% --Units that are not directionally selective
 params.excludeNonSelectiveUnits=0; % 1 recommended if running controls
 %% --Units that are directionally selective usually
@@ -28,8 +28,8 @@ params.excludeNonResponsive=1;
 %% Gaidica leventhal '18 used [-.5 2] inspect data
 params.zScale=[-2 2];
 %% do you want to process specific region?
-specifyRegions=0;
-regionsOfInterest={'cbRecipients','cbRecipientsBroad'}; 
+specifyRegions=1;
+regionsOfInterest={'VM','cbRecipientsBroad'}; 
 %% for plotting the difference in zscore values of behaviorA-behaviorB  %%
 params.heatMapBehaviorA='moveleft';
 params.heatMapBehaviorB='moveright';
@@ -82,9 +82,11 @@ for i = 1:length(regionsAvailable)
     regionPath = fullfile(parentDir, region);
     params.regionSummaryPath=regionPath;
     params.combinedRegionFlag=0;
-    load(fullfile(regionPath, strcat(region,'_unitSummary.mat')))
+    load(fullfile(regionPath, strcat(region,'_unitSummary_lite.mat')))
+    eventZscored={};
     for t=1:length(params.treatmentsToProcess)
             params.treatmentToProcess=params.treatmentsToProcess{t};
+            treatment=params.treatmentToProcess;
             disp('loading summary mat file this may take some time...')
             if exist('combinedRegions') && isstruct(combinedRegions)
                 
@@ -94,28 +96,32 @@ for i = 1:length(regionsAvailable)
             for b=1:length(params.behaviorFields)
                 params.behaviorField=params.behaviorFields{b};
                 [filteredUnitNames,eventHeatMaps,primaryEvents,secondaryEvents]=heatMapPlotting2(regionUnits,params);
+                eventZscored.(treatment)=eventHeatMaps;
+                
+
                 if isempty(filteredUnitNames)
                     fprintf('No valid %s units in %s',params.treatmentToProcess,region)
                     continue
                 end
-                if params.combinedRegionFlag==1
-                    keyboard
-                    % heatMapPlotting_byRatID(regionUnits,params);
-                    % heatMapDiffBehaviors_byRatID(regionUnits,params);
-                else
-                    heatMapPlotting_byRatID(regionUnits,params);
-                end
+                % if params.combinedRegionFlag==1
+                %     continue
+                %     % heatMapPlotting_byRatID_combinedRegion(regionUnits,params);
+                %     % heatMapDiffBehaviors_byRatID(regionUnits,params);
+                % else
+                %     %heatMapPlotting_byRatID(regionUnits,params);
+                % end
             end
-            [filteredUnitNames_diffBehaviors,eventHeatMaps_diffBehaviors,primaryEvents_diffBehaviors]=heatMapDiffBehaviors(regionUnits,params);
-            if params.combinedRegionFlag==1
-                keyboard
-                % heatMapPlotting_byRatID(regionUnits,params);
-                % heatMapDiffBehaviors_byRatID(regionUnits,params);
-            else
-                heatMapDiffBehaviors_byRatID(regionUnits,params);
-            end
+            %[filteredUnitNames_diffBehaviors,eventHeatMaps_diffBehaviors,primaryEvents_diffBehaviors]=heatMapDiffBehaviors(regionUnits,params);
+            % if params.combinedRegionFlag==1
+            %     keyboard
+            %     % heatMapPlotting_byRatID(regionUnits,params);
+            %     % heatMapDiffBehaviors_byRatID(regionUnits,params);
+            % else
+            %     %heatMapDiffBehaviors_byRatID(regionUnits,params);
+            % end
             fprintf('heat maps created for %s units in %s',params.treatmentToProcess,region)
     end
+    plotEventTracesDual(eventZscored.control, eventZscored.lesion, params);
     disp('all heat maps created for all beahviors and rat ids')
     % for b=1:length(params.behaviorField)
     %     behaviorField=params.behaviorField{b};
@@ -160,7 +166,7 @@ for i = 1:length(regionsAvailable)
     %     warning('Tiled layout handle "t" is not valid. Skipping pie chart for region %s.', region);
     % end
     fprintf('Finished %s\n',region)
-    
+    clearvars("regionUnits")
 end
 % Save combined figure
 % saveas(selectivityFig, fullfile(parentDir, 'AllRegions_SelectivityPieCharts.png'));

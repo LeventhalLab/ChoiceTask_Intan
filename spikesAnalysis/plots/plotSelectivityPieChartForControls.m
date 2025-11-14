@@ -52,7 +52,7 @@ function plotSelectivityPieChartForControls(unitTable, params)
     end
 
     legend(ax, legendLabels, 'Location', 'eastoutside', 'Interpreter', 'none');
-    title(ax, sprintf('%s (n = %d)', region, height(uniqueUnits)), 'Interpreter', 'none');
+    title(ax, sprintf('%s (n = %d)', 'CB-Recipient', height(uniqueUnits)), 'Interpreter', 'none');
 
     % Optional save
     if nargin >= 2 && ~isempty(savePath) && ~isfield(params, 'parentAxes')

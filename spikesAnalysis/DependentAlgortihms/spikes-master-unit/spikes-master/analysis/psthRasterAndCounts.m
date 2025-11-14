@@ -1,4 +1,4 @@
-function [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(spikeTimes, eventTimes, window, psthBinSize)
+function [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(spikeTimes, eventTimes, window, psthBinSize,featureName)
 % function [psth, bins, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(clusterspikes, ts, window)
 % function to generate psth (spike/bin, Hz, zscored) and raster data to be
 % plotted. 
@@ -62,9 +62,21 @@ psthHz = (psth ./ psthBinSize)/(length(eventTimes)); % Convert spike counts to f
 psthHz = movmean(psthHz, 3);
 
 %Generate Rasters
-[rasterX,yy] = rasterize(stRelToEvent); 
-rasterY = yy+reshape(repmat(wr,3,1),1,length(wr)*3); % yy is of the form [0 1 NaN 0 1 NaN...] so just need to add trial number to everything
-
+try
+    [rasterX,yy] = rasterize(stRelToEvent); 
+    rasterY = yy+reshape(repmat(wr,3,1),1,length(wr)*3); % yy is of the form [0 1 NaN 0 1 NaN...] so just need to add trial number to everything
+catch ME
+    if strcmp(featureName,'alltrials')
+        rasterX=[];
+        rasterY=[];
+        
+    else
+        keyboard
+        rasterX=[];
+        rasterY=[];
+        
+    end
+end
 
 spikeCounts = zeros(1, nRanges);
 

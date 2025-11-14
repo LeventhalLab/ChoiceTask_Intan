@@ -79,24 +79,24 @@ plotACG=true;
 kilosortVersion = 4; % if using kilosort4, you need to have this value kilosertVersion=4. Otherwise it does not matter. 
 gain_to_uV = 0.195;
 binSize=0.02; %Psth
-ignoreTheseRegions=1; % do you specifically want to ignore some regions?
-ignoreRegions={};
+ignoreTheseRegions=0; % do you specifically want to ignore some regions?
+ignoreRegions={'AHP'	'LH'	'Mt','Mt-VM','PLH',	'PaPo','PefLH-LH'};
 % regionOfinterest={'Rt/VA','Rt/ns','SubI',...
 %     'VA/VPL/VM','VM/VL','VM/VL/VPL','ZI/VM','ZI/SubI'};
 behaviorA={'alltrials'};
 behaviorAname='alltrials';
-behaviorB={};
-behaviorBname=[];
-behaviorC={};
-behaviorCname=[];
-behaviorD={};
-behaviorDname=[];
-behaviorE={};
-behaviorEname=[];
-behaviorF={};
-behaviorFname=[];
-behaviorG={};
-behaviorGname=[];
+behaviorB={'correct'};
+behaviorBname=['correct'];
+behaviorC={'moveleft'};
+behaviorCname=['moveleft'];
+behaviorD={'moveright'};
+behaviorDname=['moveright'];
+behaviorE={'correct','cuedleft'};
+behaviorEname=['correct_cuedleft'];
+behaviorF={'correct','cuedright'};
+behaviorFname=['correct_cuedright'];
+behaviorG={'wrong'};
+behaviorGname=['wrong'];
 outputTitle=[];
 
 
@@ -134,7 +134,7 @@ for r=1:length(regionsAvailable)
     fprintf('Working on region %s\n',regionOfinterest)
     regionSummaryPath=fullfile(parent_directory,'RegionalSummary');
     regionSummaryPath=fullfile(regionSummaryPath,regionOfinterest);
-    regionFile = fullfile(regionSummaryPath, [regionOfinterest '_unitSummary.mat']);
+    regionFile = fullfile(regionSummaryPath, [regionOfinterest '_unitSummary_lite.mat']);
     if isfile(regionFile)
         fprintf('Loading region %s\n',regionOfinterest)
         load(regionFile);
@@ -408,7 +408,7 @@ for r=1:length(regionsAvailable)
                                         ts=ts(~isnan(ts));
                                         
                                         % [spikeTimes, psth, bins,binWidthInSeconds,psthHz, numRows, zscoredpsth, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(spikeTimes, eventTimes, window, psthBinSize);
-                                        [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(cluster_spikes(g, :)', ts, [-1 1], binSize);
+                                        [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(cluster_spikes(g, :)', ts, [-1 1], binSize,featureName);
                                         zscoredHz=(psthHz-meanFR) ./ stdMeanFR;
                                         min_psth = min(min_psth, min(psthHz));
                                         max_psth = max(max_psth, max(psthHz));
@@ -429,7 +429,7 @@ for r=1:length(regionsAvailable)
                                         ts=ts(~isnan(ts));
                                         
                                         % [spikeTimes, psth, bins,binWidthInSeconds,psthHz, numRows, zscoredpsth, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(spikeTimes, eventTimes, window, psthBinSize);
-                                        [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(cluster_spikes(g, :)', ts, [-1 1], binSize);
+                                        [spikeTimes, psth, bins,psthHz, rasterX, rasterY, spikeCounts] = psthRasterAndCounts(cluster_spikes(g, :)', ts, [-1 1], binSize,featureName);
                                         zscoredHz=(psthHz-meanFR) ./ stdMeanFR;
                                         
                                         %% Plot PSTH

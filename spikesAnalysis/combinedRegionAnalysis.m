@@ -13,8 +13,8 @@ params={};
 params.potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodClick','foodRetrieval'};
 % lesion or control?
 params.treatmentToProcess='control';
-combinedRegionName='cbRecipientsBroad';
-regionsToCombine={'VL','VL-VPL','VL-VPL-VPM','VA-VPL-VM','VM-VL-VPL','VM-VL'};
+combinedRegionName='OtherRegions';
+regionsToCombine={'LH','Mt','PLH','PaPo','PefLH-LH','Rt','SubI', 'ZI','ZI-SubI'};
 plotHeatMap=0;
 % Specify the behavior we are interested in plotting for heat map
 params.behaviorField = 'correct_cuedleft';

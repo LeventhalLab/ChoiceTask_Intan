@@ -6,15 +6,12 @@ allEntries = dir(parentDir);
 % Filter only directories, excluding '.' and '..'
 isSubFolder = [allEntries.isdir] & ~ismember({allEntries.name}, {'.', '..'});
 regionsAvailable = {allEntries(isSubFolder).name};
-behaviorField='correct';
+behaviorField='alltrials';
 load(fullfile(parentDir,'AllROIs_unitTable.mat'))
-behaviorFields={'correct'};
+behaviorFields={'alltrials','correct_cuedleft','correct_cuedright', 'moveleft', 'moveright','correct'};
 params.compareSelectivity={'ipsilateral','contralateral','NotDirectionallySelective'};
 params.treatmentFilter='control';
 regionsAvail=unique(allUnitTable.region);
-params.potentialeventNames={'cueOn','centerIn','tone','centerOut','houseLightOn','sideIn','wrong','sideOut','foodRetrieval'};
-params.viewplots=1;
-
 % for r=1:length(regionsAvail)
 %     region=regionsAvail{r};
 %     regionUnitTable = allUnitTable(strcmp(allUnitTable.region, region), :);
@@ -50,5 +47,3 @@ end
 tonePrimaryUnitsAllTrials=alltrialstable(strcmp(allUnitTable.primaryEvent, 'tone'), :);
 alltrialstable=allUnitTable(strcmp(allUnitTable.behavior,'alltrials'),:);
 lotSelectivityPieChartForControls(alltrialstable, params);
-comparePrimaryEventTwoRegions(allUnits, behaviorField, eventName, treatment, regionA, regionB)
-primaryEventsBarGraph_TwoRegions(allUnitTable, behaviorField, regionA, regionB, parentDir, params)

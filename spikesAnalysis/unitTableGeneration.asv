@@ -13,7 +13,7 @@ for i = 1:length(regionsAvailable)
     regionPath = fullfile(parentDir, region);
     
     params.regionSummaryPath=regionPath;
-    matFileName = strcat(region, '_unitSummary_spikesWbehavioralTS.mat');
+    matFileName = strcat(region, '_unitSummary.mat');
     regionFileName=fullfile(regionPath,matFileName);
     load(regionFileName);
     if exist('combinedRegions') && isstruct(combinedRegions)

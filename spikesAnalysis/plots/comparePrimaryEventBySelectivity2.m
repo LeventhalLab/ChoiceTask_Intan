@@ -1,11 +1,12 @@
 function comparePrimaryEventBySelectivity2(unitTable, parentDir, behaviorField, params)
 % Compare fraction of units by direction selectivity groups
 % for a specific behaviorField and plot bar graph with pairwise significance.
+% Events are sorted according to params.potentialEventNames
 
-% Filter by behavior field
+%% Filter by behavior field
 filteredTable = unitTable(strcmp(unitTable.behavior, behaviorField), :);
 
-% Selectivity groups to compare
+%% Selectivity groups to compare
 if ~isfield(params, 'compareSelectivity') || length(params.compareSelectivity) < 2
     error('You must specify at least two selectivity groups in params.compareSelectivity');
 end
@@ -15,16 +16,21 @@ numGroups = numel(selectivityGroups);
 % Keep only specified selectivity groups
 filteredTable = filteredTable(ismember(filteredTable.directionSelectivity, selectivityGroups), :);
 
-% Get unique primary events
-primaryEvents = unique(filteredTable.primaryEvent, 'stable');
+%% Get primary events in the order of params.potentialEventNames
+allPrimaryEvents = unique(filteredTable.primaryEvent, 'stable');
+[isInOrder, loc] = ismember(allPrimaryEvents, params.potentialeventNames);
+existingEvents = allPrimaryEvents(isInOrder);
+sortedIdx = loc(isInOrder);
+[~, order] = sort(sortedIdx);  % order according to potentialEventNames
+primaryEvents = existingEvents(order);
 numEvents = numel(primaryEvents);
 
-% Initialize
+%% Initialize
 proportions = zeros(numEvents, numGroups);
 pMatrix = cell(numEvents, numGroups, numGroups);
 colors = lines(numGroups);
 
-% Compute proportions and chi-square tests
+%% Compute proportions and chi-square tests
 for i = 1:numEvents
     event = primaryEvents{i};
     isEvent = strcmp(filteredTable.primaryEvent, event);
@@ -48,7 +54,7 @@ for i = 1:numEvents
     end
 end
 
-% Plot
+%% Plot
 figure('Color', 'w', 'Position', [100 100 1100 500]);
 hold on;
 b = bar(proportions, 'grouped');
@@ -58,14 +64,15 @@ for g = 1:numGroups
     b(g).DisplayName = selectivityGroups{g};
 end
 
-% Avoid clutter in legend
 legend(b, 'Location', 'Best');
 
-set(gca, 'XTickLabel', primaryEvents, 'XTickLabelRotation', 45, 'FontSize', 12);
+xticks(1:numEvents);
+xticklabels(strrep(primaryEvents, '_', '\_'));
+xtickangle(45);
 ylabel('Proportion of Units');
 title(['Primary Event Proportion by Directional Selectivity - ' strrep(behaviorField, '_', ' ')]);
 
-% Significance brackets
+%% Significance brackets
 groupWidth = min(0.8, numGroups/(numGroups + 1.5));
 for i = 1:numEvents
     yBase = max(proportions(i, :), [], 'omitnan') + 0.02;
@@ -81,10 +88,8 @@ for i = 1:numEvents
             x1 = i - groupWidth/2 + (2*(g1)-1)*groupWidth/(2*numGroups);
             x2 = i - groupWidth/2 + (2*(g2)-1)*groupWidth/(2*numGroups);
 
-            % Plot significance bracket (do not include in legend)
             plot([x1 x1 x2 x2], [y y+0.01 y+0.01 y], 'k', 'LineWidth', 1.5, 'HandleVisibility', 'off');
 
-            % Add stars
             if p < 0.001
                 sig = '***';
             elseif p < 0.01
@@ -101,30 +106,34 @@ for i = 1:numEvents
     end
 end
 
+%% Adjust Y limits
 yMax = max(proportions(:), [], 'omitnan');
 if isempty(yMax) || isnan(yMax)
     ylim([0, 1]);
 else
     ylim([0, min(1, yMax + 0.2)]);
 end
-% Save figure
+
+%% Save figure
 safeBehaviorField = regexprep(behaviorField, '[^\w]', '_');
 outFile = fullfile(parentDir, ['PrimaryEventBySelectivity_' safeBehaviorField '.png']);
 saveas(gcf, outFile);
+%keyboard
 close;
+
 end
 
-% Chi-square helper
+%% Chi-square helper
 function [h, p, stats] = chi2test(tbl)
-    rowSums = sum(tbl, 2);
-    colSums = sum(tbl, 1);
-    total = sum(tbl(:));
-    expected = (rowSums * colSums) / total;
-    chi2stat = sum((tbl - expected).^2 ./ expected, 'all');
-    df = (size(tbl,1)-1)*(size(tbl,2)-1);
-    p = 1 - chi2cdf(chi2stat, df);
-    h = p < 0.05;
-    stats.chi2stat = chi2stat;
-    stats.df = df;
-    stats.expected = expected;
+rowSums = sum(tbl, 2);
+colSums = sum(tbl, 1);
+total = sum(tbl(:));
+expected = (rowSums * colSums) / total;
+chi2stat = sum((tbl - expected).^2 ./ expected, 'all');
+df = (size(tbl,1)-1)*(size(tbl,2)-1);
+p = 1 - chi2cdf(chi2stat, df);
+h = p < 0.05;
+stats.chi2stat = chi2stat;
+stats.df = df;
+stats.expected = expected;
 end

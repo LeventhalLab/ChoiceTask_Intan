@@ -23,6 +23,10 @@ for u = 1:numel(unitNames)
         catch ME
             keyboard
         end
+    else
+        keyboard
+        MatchedUnitID=[];
+    
     end
     
     % Direction selectivity if available

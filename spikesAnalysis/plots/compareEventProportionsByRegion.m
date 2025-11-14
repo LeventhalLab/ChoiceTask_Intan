@@ -1,8 +1,8 @@
-function plotToneEventProportionsByRegion(allUnits, behaviorField)
-% Plots proportions of 'tone' events by region with permutation test significance
+function compareEventProportionsByRegion(allUnits, behaviorField, eventName, treatment)
+% Plots proportions of a specified event by region with permutation test significance
 
 % Filter to exclude lesion units and include only desired behavior
-validUnits = allUnits(~strcmp(allUnits.treatment, 'lesion') & ...
+validUnits = allUnits(~strcmp(allUnits.treatment, treatment) & ...
                       strcmp(allUnits.behavior, behaviorField), :);
 
 % Get list of regions
@@ -10,16 +10,17 @@ regions = unique(validUnits.region, 'stable');
 nRegions = numel(regions);
 
 % Initialize proportion arrays
-primaryToneProportions = nan(nRegions, 1);
-secondaryToneProportions = nan(nRegions, 1);
+primaryProportions = nan(nRegions, 1);
+secondaryProportions = nan(nRegions, 1);
 
+% Compute proportions for each region
 for i = 1:nRegions
     region = regions{i};
     regionUnits = validUnits(strcmp(validUnits.region, region), :);
     nUnits = height(regionUnits);
     if nUnits > 0
-        primaryToneProportions(i)   = sum(strcmp(regionUnits.primaryEvent, 'tone')) / nUnits;
-        secondaryToneProportions(i) = sum(strcmp(regionUnits.secondaryEvent, 'tone')) / nUnits;
+        primaryProportions(i)   = sum(strcmp(regionUnits.primaryEvent, eventName)) / nUnits;
+        secondaryProportions(i) = sum(strcmp(regionUnits.secondaryEvent, eventName)) / nUnits;
     end
 end
 
@@ -27,7 +28,7 @@ end
 figure('Color', 'w', 'Position', [100 100 1100 600]);
 hold on;
 
-barData = [primaryToneProportions, secondaryToneProportions];
+barData = [primaryProportions, secondaryProportions];
 b = bar(barData, 'grouped');
 b(1).FaceColor = [0 0.4470 0.7410];    % Blue (Primary)
 b(2).FaceColor = [0.8500 0.3250 0.0980]; % Orange (Secondary)
@@ -36,27 +37,27 @@ set(gca, 'XTick', 1:nRegions, 'XTickLabel', regions, ...
     'XTickLabelRotation', 45, 'FontSize', 12);
 ylabel('Proportion of Units');
 ylim([0 0.5]); % fixed y-axis
-title(['Tone Event Proportions by Region - ' strrep(behaviorField, '_', ' ')]); 
+title([eventName ' Event Proportions by Region - ' strrep(behaviorField, '_', ' ')]); 
 legend({'Primary', 'Secondary'}, 'Location', 'bestoutside');
 
 % ---- SIGNIFICANCE TESTING (Permutation) ----
 yOffset = 0.05; % vertical spacing for brackets
 nShuffles = 10000; % number of permutations
 
-% Define comparisons (pairwise across regions)
+% Define pairwise comparisons across regions
 combos = nchoosek(1:nRegions, 2);
 
 for iComp = 1:size(combos,1)
     iA = combos(iComp,1);
     iB = combos(iComp,2);
 
-    % Extract 0/1 vectors for 'tone'
-    primA = strcmp(validUnits.primaryEvent(strcmp(validUnits.region, regions{iA})), 'tone');
-    primB = strcmp(validUnits.primaryEvent(strcmp(validUnits.region, regions{iB})), 'tone');
-    secA  = strcmp(validUnits.secondaryEvent(strcmp(validUnits.region, regions{iA})), 'tone');
-    secB  = strcmp(validUnits.secondaryEvent(strcmp(validUnits.region, regions{iB})), 'tone');
+    % Extract 0/1 vectors for event
+    primA = strcmp(validUnits.primaryEvent(strcmp(validUnits.region, regions{iA})), eventName);
+    primB = strcmp(validUnits.primaryEvent(strcmp(validUnits.region, regions{iB})), eventName);
+    secA  = strcmp(validUnits.secondaryEvent(strcmp(validUnits.region, regions{iA})), eventName);
+    secB  = strcmp(validUnits.secondaryEvent(strcmp(validUnits.region, regions{iB})), eventName);
 
-    % --- Permutation test function ---
+    % --- Permutation test ---
     p_primary = permutationTestProportion(primA, primB, nShuffles);
     p_secondary = permutationTestProportion(secA, secB, nShuffles);
 
@@ -85,7 +86,6 @@ hold off;
 end
 
 %% --- Helper Functions ---
-
 function p = permutationTestProportion(vec1, vec2, nShuffles)
 % vec1, vec2: logical vectors 0/1 for event occurrence
 % Returns p-value from permutation test
