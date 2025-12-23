@@ -10,7 +10,7 @@ trial_features = {'all'};
 n_trialfeatures = length(trial_features);
 
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
-summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
+summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
 summary_xls_dir = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
 qualitycheck_xls = 'channels_qc_final.xlsx';

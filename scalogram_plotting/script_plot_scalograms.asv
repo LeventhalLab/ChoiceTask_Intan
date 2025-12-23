@@ -8,12 +8,24 @@
 trial_features = {'all'};
 n_trialfeatures = length(trial_features);
 
+use_log_fscale = true;
+
 power_ylims = [0, 80];
 power_yticks = [0, 20, 40, 60, 80];
 power_yticklabels = {0, [], [], [], 80};
+mrl_yticks = [0, 20, 40, 60, 80];
+mrl_yticklabels = {0, [], [], [], 80};
+if use_log_fscale
+    power_ylims = [0 log10(power_ylims(2))];
+    power_yticks = [0, log10(power_yticks(2:end))];
+    power_yticklabels = {0, [], [], [], power_ylims(2)};
+end
+mrl_ylims = mrl_ylims;
+mrl_yticks = power_yticks;
+mrl_yticklabels = power_yticklabels;
 
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
-summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
+summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
 summary_xls_dir = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
 summary_xls = fullfile(summary_xls_dir, summary_xls);
 qualitycheck_xls = 'channels_qc_final.xlsx';
@@ -22,8 +34,8 @@ qualitycheck_xls = fullfile(summary_xls_dir, qualitycheck_xls);
 % change the line below to allow looping through multiple trial types,
 % extract left vs right, etc.
 trials_to_analyze = 'correct';
-lfp_types = {'monopolar', 'bipolar'};
-lfp_type = 'monopolar';
+lfp_types = {'bipolar'};
+lfp_type = 'bipolar';
 % trials_to_analyze = 'all';
 
 t_window = [-1, 1];
@@ -62,12 +74,14 @@ for i_rat = 1 : num_rats
         cd(cur_dir)
 
         for i_lfptype = 1 : length(lfp_types)
-            lfp_type = 'bipolar';
+            % lfp_type = 'bipolar';
             lfp_type = lfp_types{i_lfptype};
             if strcmpi(lfp_type, 'monopolar')
                 power_clims = [2, 10];
+                mrl_clims = [0, 1];
             else
                 power_clims = [0, 6];
+                mrl_clims = [0, 1];
             end
 
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
@@ -88,11 +102,11 @@ for i_rat = 1 : num_rats
 
                 sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
                 trial_feature = 'all';
-                scalo_power_fig_name = sprintf('%s_scalopower_%s_%s_%s', session_name, lfp_type, trial_feature, event_name);
-                scalo_power_fig_name = fullfile(scalo_plots_folder, scalo_power_fig_name);
+                scalo_power_pdf_name = sprintf('%s_scalopower_%s_%s_%s.pdf', session_name, lfp_type, trial_feature, event_name);
+                scalo_power_pdf_name = fullfile(scalo_plots_folder, scalo_power_pdf_name);
 
-                scalo_mrl_fig_name = sprintf('%s_scalomrl_%s_%s_%s', session_name, lfp_type, trial_feature, event_name);
-                scalo_mrl_fig_name = fullfile(scalo_plots_folder, scalo_power_fig_name);
+                scalo_mrl_pdf_name = sprintf('%s_scalomrl_%s_%s_%s.pdf', session_name, lfp_type, trial_feature, event_name);
+                scalo_mrl_pdf_name = fullfile(scalo_plots_folder, scalo_mrl_pdf_name);
                 if exist(scalo_power_fig_name, 'file')% && exist(scalo_mrl_fig_name, 'file')
                     continue
                 end
@@ -154,8 +168,9 @@ for i_rat = 1 : num_rats
                             % above is for checking if the monopolar lfp or
                             % either of the channels for a bipolar lfp was
                             % bad
-    
-                            scalo_name = sprintf('%s_scalos_%s_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, trial_feature, event_name, i_shank, i_site);
+                            % "shank" in the line below really refers to the column of
+                            % sites
+                            scalo_name = sprintf('%s_scalos_%s_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, trial_feature, event_name, col_num, i_site);
                             scalo_name = fullfile(scalo_folder, scalo_name);
     
                             scalo_data = load(scalo_name);
@@ -178,10 +193,22 @@ for i_rat = 1 : num_rats
                                 mean_power = squeeze(mean_power);
                             end
                             mean_phases = circ_mean(scalo_phases, [], 1);
+                            mrl = circ_r(scalo_phases, [], [], 1);
+                            if ndims(mrl) > 2 %#ok<ISMAT>
+                                mrl = squeeze(mrl);
+                            end
+                            
     
                             figure(geometry_power_fig)
                             set(geometry_power_fig, 'CurrentAxes', geometry_power_axs(i_site, col_num))
-                            imagesc(t, f, log(mean_power), power_clims)
+                            h = pcolor(t, f, log10(mean_power+1));
+                            colormap('jet')
+                            clim(power_clims)
+                            h.EdgeColor = 'none';
+                            set(gca,'yscale', 'log');
+                            
+                            % imagesc(t, log10(f), log10(mean_power), power_clims)
+                            % heatmap(t, log(f), log(mean_power), power_clims)
                             set(gca,ydir='normal',...
                                     YLim=power_ylims,...
                                     YTick=power_yticks,...
@@ -195,6 +222,24 @@ for i_rat = 1 : num_rats
                             else
                                 set(gca, XTick=t_ticks, xticklabels=t_ticks)
                             end
+
+                            figure(geometry_mrl_fig)
+                            set(geometry_mrl_fig, 'CurrentAxes', geometry_mrl_axs(i_site, col_num))
+                            imagesc(t, log10(f), mrl, mrl_clims)
+                            set(gca,ydir='normal',...
+                                    YLim=mrl_ylims,...
+                                    YTick=mrl_yticks,...
+                                    yticklabels=mrl_yticklabels,...
+                                    XLim=t_window);
+                            if col_num > 1
+                                set(gca,yticklabels=[]);
+                            end
+                            if i_site < sites_per_shank
+                                set(gca, XTick=t_ticks, xticklabels=[]);
+                            else
+                                set(gca, XTick=t_ticks, xticklabels=t_ticks)
+                            end
+
 
                             if strcmpi(lfp_type, 'monopolar')
                                 if ~valid_channels(original_channel_num)
@@ -214,7 +259,12 @@ for i_rat = 1 : num_rats
                         end
                     end
                 end
-                print(geometry_power_fig, scalo_power_fig_name, '-dpdf')
+                print(geometry_power_fig, scalo_power_pdf_name, '-dpdf')
+                print(geometry_mrl_fig, scalo_mrl_pdf_name, '-dpdf')
+                scalo_power_fig_name = replace(scalo_power_pdf_name, '.pdf', '.fig');
+                scalo_mrl_fig_name = replace(scalo_mrl_pdf_name, '.pdf', '.fig');
+                savefig(geometry_power_fig, scalo_power_fig_name)
+                savefig(geometry_mrl_fig, scalo_mrl_fig_name)
                 close(geometry_power_fig)
                 close(geometry_mrl_fig)
             end

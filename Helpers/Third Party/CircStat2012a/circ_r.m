@@ -48,10 +48,10 @@ if nargin < 3 || isempty(d)
 end
 
 % compute weighted sum of cos and sin of angles
-r = sum(w.*exp(1i*alpha),dim);
+r = sum(w.*exp(1i*alpha), dim, 'omitnan');
 
 % obtain length 
-r = abs(r)./sum(w,dim);
+r = abs(r)./sum(w, dim, 'omitnan');
 
 % for data with known spacing, apply correction factor to correct for bias
 % in the estimation of r (see Zar, p. 601, equ. 26.16)
