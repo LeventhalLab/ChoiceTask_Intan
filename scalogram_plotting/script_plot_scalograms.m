@@ -206,12 +206,12 @@ for i_rat = 1 : num_rats
                             % scalogram for the i'th trial, j'th frequency,
                             % k'th time sample
                             mean_power = mean(scalo_power, 1, 'omitnan');
-                            if ismatrix(mean_power)
+                            if ~ismatrix(mean_power)
                                 mean_power = squeeze(mean_power);
                             end
                             mean_phases = circ_mean(scalo_phases, [], 1);
                             mrl = circ_r(scalo_phases, [], [], 1);
-                            if ismatrix(mrl)
+                            if ~ismatrix(mrl)
                                 mrl = squeeze(mrl);
                             end
                             
