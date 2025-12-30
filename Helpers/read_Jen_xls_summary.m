@@ -10,7 +10,8 @@ switch sheetname
             'sheet','probe_type',...
             'texttype','string');
     otherwise
-        xls_data = '';
+        xls_data = readtable(filename,'filetype','spreadsheet',...
+            'sheet',sheetname);
 end
 
 end

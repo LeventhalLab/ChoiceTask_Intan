@@ -18,7 +18,7 @@ if use_log_fscale
     power_yticks = [0, log10(power_yticks(2:end))];
     % power_yticklabels = {0, [], [], [], power_ylims(2)};
 end
-mrl_ylims = mrl_ylims;
+mrl_ylims = power_ylims;
 mrl_yticks = power_yticks;
 mrl_yticklabels = power_yticklabels;
 
@@ -64,6 +64,8 @@ for i_rat = 1 : num_rats
     num_sessions = length(session_dirs);
 
     session_qc_check = readtable(qualitycheck_xls, sheet=ratID);
+    rat_sheet_name = strcat(ratID, '_finished');
+    site_coords = read_Jen_xls_summary(summary_xls, rat_sheet_name);
 
     for i_session = 1 : num_sessions
 
@@ -105,7 +107,7 @@ for i_rat = 1 : num_rats
 
                 scalo_mrl_pdf_name = sprintf('%s_scalomrl_%s_%s_%s.pdf', session_name, lfp_type, trial_feature, event_name);
                 scalo_mrl_pdf_name = fullfile(scalo_plots_folder, scalo_mrl_pdf_name);
-                if exist(scalo_power_fig_name, 'file')% && exist(scalo_mrl_fig_name, 'file')
+                if exist(scalo_power_pdf_name, 'file') && exist(scalo_mrl_pdf_name, 'file')
                     continue
                 end
 
