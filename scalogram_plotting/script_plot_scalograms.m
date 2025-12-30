@@ -238,6 +238,8 @@ for i_rat = 1 : num_rats
                             else
                                 set(gca, XTick=t_ticks, xticklabels=t_ticks)
                             end
+                            % todo: add text with the region names
+
 
                             figure(geometry_mrl_fig)
                             set(geometry_mrl_fig, 'CurrentAxes', geometry_mrl_axs(i_site, col_num))
