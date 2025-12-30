@@ -185,17 +185,17 @@ for i_rat = 1 : num_rats
                             t = linspace(scalo_data.t_window(1), scalo_data.t_window(2), n_samples);
                             f = centerFrequencies(scalo_data.fb);
 
+                            % todo: eliminate scalograms with artifacts or
+                            % during times when the rat was disconnected
                             trials_during_disconnects = find_trials_during_disconnects(session_qc_check, ...
                                 scalo_data.trials(scalo_data.target_trials), ...
                                 event_list{i_event}, ...
                                 scalo_data.t_window);
 
-                            % todo: eliminate scalograms with artifacts
-
                             valid_scalos = scalo_data.event_related_scalos(~trials_during_disconnects, :, :);
     
                             data_without_nans = valid_scalos(~isnan(valid_scalos));
-                            scalo_amplitudes = abs(valid_scalos);
+                            scalo_amplitudes = abs(scalo_data.event_related_scalos);
                             scalo_power = scalo_amplitudes .^ 2;
                             scalo_phases = angle(scalo_data.event_related_scalos);
     

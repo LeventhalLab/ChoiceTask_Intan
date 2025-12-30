@@ -1,0 +1,48 @@
+function [site_xyz,brain_regions] = site_anatomy_from_probe_mapping(original_channel_nums, site_anatomy_table)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+%
+% INPUTS
+%   original_channel_nums - channel indices in the original array as
+%       recorded directly from the amplifier chip
+%   site_anatomy table - table loaded from excel file
+%       'ProbeSite_Mapping_MATLAB_RL2.xlsx'
+% OUTPUTS
+%   site_xyz - x (ML), y (AP), and z (DV) coordinates for each recording
+%       site (1 x 3 for monopolar, 2 x 3 for bipolar analysis)
+%   brain_regions - cell array containing strings identifying brain regions
+%       for each recording site
+%
+
+arguments (Input)
+    original_channel_nums {mustBeNumeric}
+    site_anatomy_table
+end
+
+arguments (Output)
+    site_xyz
+    brain_regions
+end
+
+% [amp_map, probe_map] = probe_channel_mappings(probe_type);
+
+n_chans = length(original_channel_nums);   % 1 or 2 depending on whether monopolar or bipolar
+site_xyz = zeros(n_chans, 3);
+brain_regions = cell(1, n_chans);
+for i_chan = 1 : n_chans
+    site_row = (site_anatomy_table.Intan_Site_Number == (original_channel_nums(i_chan) - 1));
+    % need to subtract one because in the excel table (which is where
+    % site_anatomy_table came from), numbering starts from
+    % zero, but in the hardcoded table in probe_site_mapping_all_probes.m,
+    % numbering starts at one (which is where original_channel_nums came
+    % from)
+    site_xyz(i_chan, 1) = site_anatomy_table.ML(site_row);
+    site_xyz(i_chan, 2) = site_anatomy_table.AP(site_row);
+    site_xyz(i_chan, 3) = site_anatomy_table.DV(site_row);
+
+    brain_regions{i_chan} = site_anatomy_table.Region(site_row);
+
+end
+
+
+end
