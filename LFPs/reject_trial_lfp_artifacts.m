@@ -1,0 +1,29 @@
+function valid_trials_logical = reject_trial_lfp_artifacts(event_triggered_lfps,rejection_threshold)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+%
+% INPUTS
+%   event_triggered_lfps - m x n matrix where each row is an lfp - that is,
+%       there are m lfp's each of duration n samples
+%   rejection_threshold - threshold value above which LFPs are rejected
+%       (should be in same units as event_triggered_lfps, usually
+%       microvolts
+%
+% OUTPUTS
+%   valid_trials_logical - boolean vector of m values; true values indicate
+%       rows of event_triggered_lfps without artifacts
+
+arguments (Input)
+    event_triggered_lfps
+    rejection_threshold
+end
+
+arguments (Output)
+    valid_trials_logical
+end
+
+% very simple artifact rejection based on thresholding
+invalid_trials_logical = any(abs(event_triggered_lfps) > rejection_threshold, 2);
+valid_trials_logical = ~invalid_trials_logical;
+
+end

@@ -41,6 +41,11 @@ for i_chan = 1 : n_chans
     site_xyz(i_chan, 3) = site_anatomy_table.DV(site_row);
 
     brain_regions{i_chan} = site_anatomy_table.Region(site_row);
+    if iscell(brain_regions{i_chan})
+        % the site_anatomy_table contains strings in a cell; take them out
+        % of the cell for ease of use later
+        brain_regions{i_chan} = brain_regions{i_chan}{1};
+    end
 
 end
 

@@ -68,12 +68,14 @@ for i_rat = 1 : n_rats
         load(trials_name)   % contains the structure "trials"
         
         % selected_trials = extract_trials_by_features(trials, trials_to_analyze);
-        % got rid of selecting trials here - just compute all the
-        % scalograms and pick out the ones we want later
         if isempty(trials)
             sprintf('no %s trials found for %s', trials_to_analyze, session_name)
             continue
         end
+        % 
+        lfp_data = load(lfp_fname);
+
+%         [ordered_lfp, intan_site_order, intan_site_order_for_trials_struct, site_order] = lfp_by_probe_site_ALL(lfp_data, probe_type);
 
         for i_lfptype = 1 : length(lfp_types)
 
@@ -86,12 +88,6 @@ for i_rat = 1 : n_rats
                 continue
             end
 
-            all_scalos_calculated = check_scalograms_calculated(session_name, event_list, lfp_type, probe_type, parent_directory);
-            % if all_scalos_calculated
-            %     sprintf('all scalograms calculated for %s, %s trials', session_name, trials_to_analyze)
-            %     continue
-            % end
-            lfp_data = load(lfp_fname);
             Fs = lfp_data.actual_Fs;
             samp_window = round(t_window * Fs);
             samples_per_event = range(samp_window) + 1;
@@ -100,9 +96,13 @@ for i_rat = 1 : n_rats
                     'wavelet','amor',...
                     'frequencylimits', [1, 100]);
 
-            probe_type = lfp_data.probe_type;
-            intan2probe_mapping = lfp_data.intan2probe_mapping;
-
+            all_scalos_calculated = check_scalograms_calculated(session_name, event_list, lfp_type, probe_type, parent_directory);
+            % if all_scalos_calculated
+            %     sprintf('all scalograms calculated for %s, %s trials', session_name, trials_to_analyze)
+            %     continue
+            % end
+            lfp_data = load(lfp_fname);
+            Fs = lfp_data.actual_Fs;
             if strcmpi(lfp_type, 'bipolar')
                 ordered_lfp = lfp_data.bipolar_lfp;
             else
@@ -148,15 +148,7 @@ for i_rat = 1 : n_rats
                     % etl_g = gpuArray(event_triggered_lfps);
                     [event_related_scalos, ~, coi] = trial_scalograms(event_triggered_lfps, fb);
 
-                    save(scalo_name, 'event_related_scalos', ...
-                                     'event_triggered_lfps', ...
-                                     'fb', 'coi', ...
-                                     't_window', ...
-                                     'i_channel', ...
-                                     'event_ts', ...
-                                     'trials', ...
-                                     'probe_type', ...
-                                     'intan2probe_mapping');
+                    save(scalo_name, 'event_related_scalos', 'event_triggered_lfps', 'fb', 'coi', 't_window', 'i_channel', 'event_ts', 'trials');
                     % saving i_channel is a check to make sure that shank
                     % and site are numbered correctly later
         
