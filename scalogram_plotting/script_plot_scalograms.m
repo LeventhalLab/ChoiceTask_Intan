@@ -84,7 +84,7 @@ for i_rat = 1 : num_rats
                 power_clims = [2, 10];
                 mrl_clims = [0, 1];
             else
-                power_clims = [0, 10];
+                power_clims = [0, 5];
                 mrl_clims = [0, 1];
             end
 
@@ -253,15 +253,15 @@ for i_rat = 1 : num_rats
                             end
                             
                             text_x = 0.025;
-                            text_y = 0.8;
+                            text_y = 1.04;
                             n_regions = length(region_name);
                             region_str = region_name{1};
                             if length(region_name) == 2
                                 region_str = sprintf('%s, %s', region_str, region_name{2});
                             end
-                            text_str = sprintf('%s\nn = %d',region_str, n_valid_scalos);
+                            text_str = sprintf('%s, n = %d',region_str, n_valid_scalos);
                             text(text_x, text_y, text_str, units="normalized", ...
-                                FontSize=7, Color='w');
+                                FontSize=7, Color='k');
                             if i_site == n_rows
                                 % last row, keep the x-labels
                                 set(gca,'xtick',t_ticks,'xticklabel',t_labels,'fontsize',7)
@@ -290,7 +290,7 @@ for i_rat = 1 : num_rats
                                 set(gca, XTick=t_ticks, xticklabels=t_ticks)
                             end
                             text(text_x, text_y, text_str, units="normalized", ...
-                                FontSize=7, Color='w')
+                                FontSize=7, Color='k')
                             if i_site == n_rows
                                 % last row, keep the x-labels
                                 set(gca,'xtick',t_ticks,'xticklabel',t_labels,'fontsize',7)

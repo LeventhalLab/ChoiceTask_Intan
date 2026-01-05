@@ -84,7 +84,7 @@ for i_rat = 1 : num_rats
                 power_clims = [2, 10];
                 mrl_clims = [0, 1];
             else
-                power_clims = [0, 10];
+                power_clims = [0, 5];
                 mrl_clims = [0, 1];
             end
 
@@ -207,7 +207,7 @@ for i_rat = 1 : num_rats
                             % are column vectors
                             valid_scalos = scalo_data.event_related_scalos(valid_scalo_idx, :, :);
 
-                            n_valid_scalos = sum(valid_scalos);
+                            n_valid_scalos = sum(valid_scalo_idx);
     
                             data_without_nans = valid_scalos(~isnan(valid_scalos));
                             scalo_amplitudes = abs(valid_scalos);
@@ -253,14 +253,20 @@ for i_rat = 1 : num_rats
                             end
                             
                             text_x = 0.025;
-                            text_y = 0.9;
+                            text_y = 1;
                             n_regions = length(region_name);
                             region_str = region_name{1};
                             if length(region_name) == 2
                                 region_str = sprintf('%s, %s', region_str, region_name{2});
                             end
-                            text(text_x, text_y, region_str, units="normalized", ...
-                                FontSize=7, Color='w');
+                            text_str = sprintf('%s, n = %d',region_str, n_valid_scalos);
+                            text(text_x, text_y, text_str, units="normalized", ...
+                                FontSize=7, Color='k');
+                            if i_site == n_rows
+                                % last row, keep the x-labels
+                                set(gca,'xtick',t_ticks,'xticklabel',t_labels,'fontsize',7)
+                                xlabel('time (s)',FontSize=7)
+                            end
 
                             figure(geometry_mrl_fig)
                             set(geometry_mrl_fig, 'CurrentAxes', geometry_mrl_axs(i_site, col_num))
@@ -283,8 +289,13 @@ for i_rat = 1 : num_rats
                             else
                                 set(gca, XTick=t_ticks, xticklabels=t_ticks)
                             end
-                            text(text_x, text_y, region_str, units="normalized", ...
+                            text(text_x, text_y, text_str, units="normalized", ...
                                 FontSize=7, Color='w')
+                            if i_site == n_rows
+                                % last row, keep the x-labels
+                                set(gca,'xtick',t_ticks,'xticklabel',t_labels,'fontsize',7)
+                                xlabel('time (s)',FontSize=7)
+                            end
 
                             if strcmpi(lfp_type, 'monopolar')
                                 if ~valid_channels(original_channel_num)
@@ -300,11 +311,7 @@ for i_rat = 1 : num_rats
                                     set(gca,'linewidth', 3)
                                 end
                             end
-                        if i_site == n_rows
-                            % last row, keep the x-labels
-                            set(gca,'xtick',t_ticks,'xticklabel',t_labels,'fontsize',7)
-                            xlabel('time (s)',FontSize=7)
-                        end
+
                         clear scalo_data
                         end
                     end
