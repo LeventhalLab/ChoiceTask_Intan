@@ -23,8 +23,9 @@ end
 detached_intervals = find_detached_intervals(session_qc_check,session_name);
 n_intervals = size(detached_intervals, 1);
 
-event_ts = extractEvent_ts( event_name, trials, false );
+event_ts = extractEvent_ts( event_name, trials, false, true );
 n_ts = length(event_ts);
+n_trials = length(trials);
 
 if n_intervals == 0
     trials_during_disconnects = false(1, n_ts);

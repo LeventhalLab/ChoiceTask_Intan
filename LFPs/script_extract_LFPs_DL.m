@@ -27,7 +27,7 @@ for i_rat = 1 : num_rats
         continue;
     end
 
-    probe_type = probe_types{probe_types.RatID == ratID, 2};
+    probe_type = probe_types{probe_types.ratID == ratID, 2};
     processed_folder = find_data_folder(ratID, 'processed', parent_directory);
     rawdata_folder = find_data_folder(ratID, 'rawdata', parent_directory);
     session_dirs = dir(fullfile(rawdata_folder, strcat(ratID, '*')));
@@ -46,21 +46,21 @@ for i_rat = 1 : num_rats
             continue
         end
 
-        lfp_fname = strcat(session_name, '_lfp.mat');
+        lfp_fname = sprintf('%s_lfp.mat', session_name);
         processed_session_folder = fullfile(processed_folder, session_name);
-        full_lfp_name = fullfile(processed_session_folder, lfp_fname);
+        full_lfp_fname = fullfile(processed_session_folder, lfp_fname);
         if ~isfolder(processed_session_folder)
             mkdir(processed_session_folder)
         end
-%         if isfile(lfp_fname)
-%             sprintf('%s already calculated, skipping', lfp_fname)
-%             continue
-%         end
+        if isfile(full_lfp_fname)
+            sprintf('%s already calculated, skipping', lfp_fname)
+            continue
+        end
 
         sprintf('working on %s', session_name)
         [lfp, actual_Fs] = calculate_monopolar_LFPs(phys_folder, target_Fs, convert_to_microvolts);
 
-        save(full_lfp_name, 'lfp', 'actual_Fs', 'convert_to_microvolts');
+        save(full_lfp_fname, 'lfp', 'actual_Fs', 'convert_to_microvolts');
 
     end
 

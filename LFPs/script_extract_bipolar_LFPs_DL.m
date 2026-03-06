@@ -1,23 +1,25 @@
 % script to calculate LFPs for all of Jen's rats; store in files in
 % the processed data folders
 
-parent_directory = 'Z:\data\ChoiceTask\';
-summary_xls = 'ProbeSite_Mapping_MATLAB.xlsx';
-summary_xls_dir = 'Z:\data\ChoiceTask\Probe Histology Summary';
+sharedX_drive = 'X:';
+parent_directory = fullfile(sharedX_drive, 'data\ChoiceTask\');
+summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
+summary_xls_dir = fullfile(sharedX_drive, 'data\ChoiceTask\Probe Histology Summary');
 summary_xls = fullfile(summary_xls_dir, summary_xls);
 
 probe_type_sheet = 'probe_type';
-probe_types = read_choicetask_xls_summary(summary_xls, probe_type_sheet);
+probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 % NOTE - UPDATE FUNCTION read_Jen_xls_summary WHEN WE NEED OTHER
 % INFORMATION OUT OF THAT SPREADSHEET
 
-[rat_nums, ratIDs, ratIDs_goodhisto] = get_rats2process(summary_xls);
+% [rat_nums, ratIDs, ratIDs_goodhisto] = get_rats2process(summary_xls);
+[ratIDs, ratIDs_goodhisto] = get_rat_list('all', parent_directory);
 
 target_Fs = 500;   % in Hz, target LFP sampling rate after decimating the raw signal
 
 num_rats = length(ratIDs);
 
-for i_rat = 16 : num_rats
+for i_rat = 1 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
 
@@ -25,7 +27,7 @@ for i_rat = 16 : num_rats
         continue;
     end
 
-    probe_type = probe_types{probe_types.RatID == ratID, 2};
+    probe_type = probe_types{probe_types.ratID == ratID, 2};
     processed_folder = find_data_folder(ratID, 'processed', parent_directory);
     rawdata_folder = find_data_folder(ratID, 'rawdata', parent_directory);
     session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));

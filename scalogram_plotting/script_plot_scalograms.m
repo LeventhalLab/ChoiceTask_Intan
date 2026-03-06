@@ -10,7 +10,7 @@ clear all
 trial_features = {'all'};
 n_trialfeatures = length(trial_features);
 
-rejection_threshold = 200;   % in microvolts
+rejection_threshold = 500;   % in microvolts
 
 use_log_fscale = false;
 
@@ -199,17 +199,27 @@ for i_rat = 1 : num_rats
                                 scalo_data.trials, ...
                                 event_list{i_event}, ...
                                 scalo_data.t_window);
+                            if isempty(trials_during_disconnects)
+                                % no trials with this event
+                                continue
+                            end
 
-                            % artifact rejection
+                            % artifact rejection and make sure we only
+                            % average scalograms for trials for which this
+                            % event exists
+                            nanrows = all(isnan(scalo_data.event_triggered_lfps), 2);
+                            allzero_rows = all(scalo_data.event_triggered_lfps == 0, 2);
+                            valid_trial_rows = ~nanrows & ~allzero_rows;
                             valid_scalo_idx = reject_trial_lfp_artifacts(scalo_data.event_triggered_lfps, rejection_threshold);
-                            valid_scalo_idx = valid_scalo_idx(:) & ~trials_during_disconnects(:);
+                            valid_scalo_idx = valid_scalo_idx(:) & ~trials_during_disconnects(:) & valid_trial_rows(:);
                             % added the colon subscript to make sure both
                             % are column vectors
                             valid_scalos = scalo_data.event_related_scalos(valid_scalo_idx, :, :);
 
                             n_valid_scalos = sum(valid_scalo_idx);
     
-                            data_without_nans = valid_scalos(~isnan(valid_scalos));
+                            % data_without_nans = valid_scalos(~isnan(valid_scalos));
+
                             scalo_amplitudes = abs(valid_scalos);
                             scalo_power = scalo_amplitudes .^ 2;
                             scalo_phases = angle(valid_scalos);

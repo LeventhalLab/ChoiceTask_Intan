@@ -13,7 +13,7 @@ sessions_to_skip = {'R0425_20220728a'};
 % digitalin.dat is too big to load (> 3 GB)
 n_rats = length(ratIDs);
 
-for i_rat = 22 : n_rats
+for i_rat = 1 : n_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
 

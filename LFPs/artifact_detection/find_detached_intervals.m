@@ -18,7 +18,14 @@ arguments (Output)
     detached_intervals
 end
 
-cur_session_idx = strcmp(session_qc_check.session, session_name);
+if isfield(session_qc_check, 'session')
+    cur_session_idx = strcmp(session_qc_check.session, session_name);
+else
+    % ugly, but keeps from throwing errors if the detached table isn't in
+    % the excel spreadsheet
+    detached_intervals = [];
+    return
+end
 if ~any(cur_session_idx)
     detached_intervals = [];
     return

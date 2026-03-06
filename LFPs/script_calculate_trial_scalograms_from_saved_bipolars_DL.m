@@ -32,12 +32,12 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 % NOTE - UPDATE FUNCTION read_Jen_xls_summary WHEN WE NEED OTHER
 % INFORMATION OUT OF THAT SPREADSHEET
 
-% [ratIDs, ratIDs_goodhisto] = get_rat_list('all', parent_directory);
-[rat_nums, ratIDs] = get_valid_choicetraskprobe_rats();
+[ratIDs, ratIDs_goodhisto] = get_rat_list('all', parent_directory);
+% [rat_nums, ratIDs] = get_valid_choicetraskprobe_rats();
 
 n_rats = length(ratIDs);
 
-for i_rat = 1 : n_rats
+for i_rat = 33 : n_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
 
@@ -113,7 +113,7 @@ for i_rat = 1 : n_rats
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
             n_channels = size(ordered_lfp, 1);
 
-            for i_event = 1 : length(event_list)
+            for i_event = 7 : length(event_list)
                 event_name = event_list{i_event};
                 sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
     
