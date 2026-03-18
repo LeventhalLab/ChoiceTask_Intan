@@ -119,43 +119,38 @@ badIDs=params.badAllTrialsIDs;
                 continue
             end
             if params.excludeMatchUnits && ~isfield(unit.unitMetrics,'UIDs')
-                filteredUnitNames{end+1} = uid; 
-            elseif params.excludeMatchUnits && ~isempty(unit.unitMetrics.UIDs)
-                    MatchID=[];
-                    ratID=[];
-                    if ~isfield(unit.unitMetrics,'UIDs')
-                        keyboard
-                        continue
-                    end
-                    MatchID=num2str(unit.unitMetrics.UIDs);
-                    ratID=regexp(uid, 'R0\d+', 'match', 'once');
-                    if ~isfield(unit.behavioralFeatures.(behaviorField),'cueOn')
-                        continue
-                    end
-                    numTrials=length(unit.behavioralFeatures.(behaviorField).cueOn.timeStamps);
-                    for m=1:length(unitNames)
-                        unit2=unitNames{m};
-                        if strcmp(unit2,uid)
-                            continue
-                        end
-                        ratID2=[];
-                        ratID2=regexp(unit2, 'R0\d+', 'match', 'once');
-                        if ~strcmp(ratID2, ratID)
-                            continue
-                        end
-                        if ~isfield(regionUnits.(unit2).unitMetrics,'UIDs') || ~strcmp(MatchID,num2str(regionUnits.(unit2).unitMetrics.UIDs))
-                            continue
-                        end
-                        if ~isfield(regionUnits.(unit2).behavioralFeatures.(behaviorField),'cueOn')
-                            continue
-                        end
-                        if numTrials > length(regionUnits.(unit2).behavioralFeatures.(behaviorField).cueOn.timeStamps)
-                            filteredUnitNames{end+1} = uid; 
-                        else
-                            continue
-                        end
-                    end
                 
+            if params.excludeMatchUnits && ~isempty(unit.unitMetrics.UIDs)
+                MatchID=[];
+                ratID=[];
+                MatchID=num2str(unit.unitMetrics.UIDs);
+                ratID=regexp(uid, 'R0\d+', 'match', 'once');
+                if ~isfield(unit.behavioralFeatures.(behaviorField),'cueOn')
+                    continue
+                end
+                numTrials=length(unit.behavioralFeatures.(behaviorField).cueOn.timeStamps);
+                for m=1:length(unitNames)
+                    unit2=unitNames{m};
+                    if strcmp(unit2,uid)
+                        continue
+                    end
+                    ratID2=[];
+                    ratID2=regexp(unit2, 'R0\d+', 'match', 'once');
+                    if ~strcmp(ratID2, ratID)
+                        continue
+                    end
+                    if ~strcmp(MatchID,num2str(regionUnits.(unit2).unitMetrics.UIDs))
+                        continue
+                    end
+                    if ~isfield(regionUnits.(unit2).behavioralFeatures.(behaviorField),'cueOn')
+                        continue
+                    end
+                    if numTrials > length(regionUnits.(unit2).behavioralFeatures.(behaviorField).cueOn.timeStamps)
+                        filteredUnitNames{end+1} = uid; 
+                    else
+                        continue
+                    end
+                end
             else
                 filteredUnitNames{end+1} = uid; 
             end

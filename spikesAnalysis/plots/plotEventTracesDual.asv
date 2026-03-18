@@ -1,4 +1,4 @@
-function plotEventTracesDual(eventHeatMapsControl, eventHeatMapsLesion, params)
+function plotDualEventTraces(eventHeatMapsControl, eventHeatMapsLesion, params)
 %% Plot mean ± SEM z-scored traces for all events, dual-treatment
 % eventHeatMapsControl / Lesion: structs with fields like cueOn, centerIn, etc.
 % params.timeWindow = [-0.9 0.9] (subset window)
@@ -6,10 +6,10 @@ function plotEventTracesDual(eventHeatMapsControl, eventHeatMapsLesion, params)
 
 if ~isfield(params,'timeWindow'); params.timeWindow = [-0.9 0.9]; end
 if ~isfield(params,'smoothWindow'); params.smoothWindow = 3; end
-behavior=params.behaviorField;
+
 eventNames = fieldnames(eventHeatMapsControl);
 nEvents = length(eventNames);
-region=params.region;
+
 % Original time vector
 fullTime = linspace(-1,1,101);
 
@@ -23,15 +23,7 @@ lesionColor  = [1 0.5 0];  % orange
 
 fig = figure('Name','Dual Treatment Event Traces','Units','inches','Position',[1 1 14 6]);
 tiledlayout(1,nEvents,'TileSpacing','Tight','Padding','None');
-controlColor = [0 0.447 0.741];
-lesionColor  = [0.85 0.325 0.098];
-
-sgtitle({ ...
-    sprintf('Mean \\pm SEM | Behavior = %s | Region = %s', behavior, region), ...
-    sprintf('\\color[rgb]{%.3f %.3f %.3f}Lesion \\color{black}vs \\color[rgb]{%.3f %.3f %.3f}Control', ...
-        lesionColor, controlColor) ...
-    }, ...
-    'Interpreter','tex', 'FontSize',14);
+sgtitle(sprintf('Mean ± SEM Z-score Traces | %s', strrep(params.behaviorField,'_',' ')),'FontSize',12);
 subPlotTitle=params.heatMapTitle;
 for e = 1:nEvents
     evt = eventNames{e};
@@ -75,8 +67,7 @@ if ~exist(params.regionSummaryPath, 'dir')
     mkdir(params.regionSummaryPath);
 end
 subPlotTitle=strrep(subPlotTitle,' ','_');
-savePath=fullfile(params.regionSummaryPath,behavior);
-saveFile = fullfile(savePath, ['MeanTrace_ControlVsLesion_' subPlotTitle '.png']);
+saveFile = fullfile(params.regionSummaryPath, ['MeanTrace_ControlVsLesion_' params.behaviorField '_' region '_' subPlotTitle '.png']);
 %saveFile = fullfile(params.regionSummaryPath, 'MeanTrace_ControlVsLesion.png');
 saveas(fig, saveFile);
 

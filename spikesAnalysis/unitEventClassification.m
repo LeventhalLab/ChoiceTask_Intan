@@ -188,7 +188,7 @@ for i = 1:length(regionsAvailable)
                             if maxEventZscore == abs(minEventZscoreRaw)
                                 rawZscore2=minEventZscoreRaw;
                             else 
-                                rawZscore2=maxEventZscore;
+                                rawZscore2=maxEventZscore; %
                             end
                         else
                             continue
