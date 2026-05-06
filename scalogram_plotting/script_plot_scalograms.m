@@ -6,7 +6,6 @@
 
 % trial_features = {'all', 'correct', 'wrong', 'moveleft', 'moveright'};
 clear all
-
 trial_features = {'all'};
 n_trialfeatures = length(trial_features);
 

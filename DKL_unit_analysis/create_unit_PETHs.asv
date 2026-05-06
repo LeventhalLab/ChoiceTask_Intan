@@ -1,0 +1,6 @@
+function create_unit_PETH_summary(unit_struct)
+
+ts = unit_struct.unitMetrics.clusterSpikes(~isnan(unit_struct.unitMetrics.clusterSpikes));
+
+
+end

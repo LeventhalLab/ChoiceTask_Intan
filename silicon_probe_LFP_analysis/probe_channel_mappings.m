@@ -42,7 +42,8 @@ if strcmpi(probe_type, 'nn8x8')
     % above is the actual intan channel numbers. Add one because Matlab
     % starts indexing at 1. Note that if this were ported to Python, would
     % NOT want to add 1 here
-    intan_amplifier_DL = intan_amplifier_DL + 1;
+    % intan_amplifier_DL = intan_amplifier_DL + 1;
+    amp_map = intan_amplifier_DL + 1;
     
     
 % Map sites ventral to dorsal on the NeuroNexus H64LP A8x8 probe.

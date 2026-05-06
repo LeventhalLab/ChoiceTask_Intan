@@ -1,0 +1,43 @@
+function [outputArg1,outputArg2] = autocorrelogram(ts,bin_width,t_win)
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+
+arguments (Input)
+    ts (1, :) double
+(1, :) double
+    bin_width (1,1) double = 0.050    % 50 ms default bin size
+    t_win (2,1) double = [-0.5, 0.5]
+end
+
+spike_ts = spike_ts(~isnan(spike_ts));
+event_ts = event_ts(~isnan(event_ts));
+
+nbins = range(t_win) / bin_width;
+total_counts = zeros(1, nbins);
+for i_event = 1 : length(event_ts)
+
+    relative_ts = spike_ts - event_ts(i_event);
+    relative_ts = relative_ts(relative_ts > t_win(1));
+    relative_ts = relative_ts(relative_ts < t_win(2));
+    [N, edges] = histcounts(relative_ts, nbins);
+
+    total_counts = total_counts + N;
+end
+
+mean_counts = total_counts / length(event_ts);
+
+end
+
+arguments (Input)
+    bin_width (1,1) double = 0.050    % 50 ms default bin size
+    t_win (2,1) double = [-0.5, 0.5]
+end
+
+arguments (Output)
+    outputArg1
+    outputArg2
+end
+
+outputArg1 = inputArg1;
+outputArg2 = inputArg2;
+end

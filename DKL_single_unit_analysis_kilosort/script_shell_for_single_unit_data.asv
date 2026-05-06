@@ -1,0 +1,50 @@
+%%
+clear all
+
+parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
+summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
+summary_xls_dir = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask\Probe Histology Summary';
+summary_xls = fullfile(summary_xls_dir, summary_xls);
+qualitycheck_xls = 'channels_qc_final.xlsx';
+qualitycheck_xls = fullfile(summary_xls_dir, qualitycheck_xls);
+
+region_summary_parent = fullfile(parent_directory, 'RegionalSummary');
+
+% find all the directories containing region data
+poss_region_dirs = dir(region_summary_parent);
+n_validregions = 0;
+for i_file = 1 : length(poss_region_dirs)
+    if poss_region_dirs(i_file).isdir
+        if any(strcmp(poss_region_dirs(i_file).name, {'.', '..'}))
+            continue
+        end
+        n_validregions = n_validregions + 1;
+        region_dirs(n_validregions) = poss_region_dirs(i_file);
+    end
+end
+
+%%
+for i_region = 1 : length(region_dirs)
+    region_name = region_dirs(i_region).name;
+    full_region_path = fullfile(region_dirs(i_region).folder, region_name);
+
+    test_name = join({region_name, 'unitSummary', 'spikesWbehavioralTS'}, '_');
+    full_unit_name = strcat(test_name{1}, '.mat');
+    full_unit_pathname = fullfile(full_region_path, full_unit_name);
+
+    if ~exist(full_unit_pathname,"file")
+        continue
+    end
+
+    load(full_unit_pathname);
+    fprintf('%s loaded\n', full_unit_name)
+
+    unit_names = fieldnames(regionUnits);
+    n_units = length(unit_names);
+
+    for i_unit = 1 : n_units
+        create_unit_PETH_summary(regionUnits.(unit_names{i_unit}), unit_names{i_unit});
+    end
+
+end
+    
