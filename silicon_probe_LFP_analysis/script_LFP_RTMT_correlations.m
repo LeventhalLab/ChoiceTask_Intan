@@ -9,7 +9,8 @@ clear all
 trial_features = {'correct'};
 n_trialfeatures = length(trial_features);
 
-rejection_threshold = 2000;   % in microvolts
+rejection_threshold = 200;   % in microvolts
+rejection_window = [-1,1];
 
 parent_directory = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
 summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
@@ -171,9 +172,9 @@ for i_rat = 1 : num_rats
                                 corr_name = sprintf('%s_correlations_%s_%s_shank%02d_site%02d.mat',session_name, lfp_type, event_name, col_num, i_site);
                                 corr_name = fullfile(scalo_folder, corr_name);
 
-                                if exist(corr_name, 'file')
-                                    continue
-                                end
+                                % if exist(corr_name, 'file')
+                                %     continue
+                                % end
     
                                 scalo_data = load(scalo_name);
                                 n_samples = size(scalo_data.event_related_scalos, 3);
@@ -198,7 +199,8 @@ for i_rat = 1 : num_rats
                                 nanrows = all(isnan(scalo_data.event_triggered_lfps), 2);
                                 allzero_rows = all(scalo_data.event_triggered_lfps == 0, 2);
                                 valid_trial_rows = ~nanrows & ~allzero_rows & valid_trial_flags;
-                                valid_scalo_bool = reject_trial_lfp_artifacts(scalo_data.event_triggered_lfps, rejection_threshold);
+                                valid_scalo_idx = reject_trial_lfp_artifacts(scalo_data.event_triggered_lfps, rejection_threshold, scalo_data.t_window, ...
+                                    scalo_data.fb.SamplingFrequency, rejection_window);
                                 valid_scalo_bool = valid_scalo_bool(:) & ~trials_during_disconnects(:) & valid_trial_rows(:);
                                 valid_scalo_idx = find(valid_scalo_bool);
                                 % added the colon subscript to make sure both

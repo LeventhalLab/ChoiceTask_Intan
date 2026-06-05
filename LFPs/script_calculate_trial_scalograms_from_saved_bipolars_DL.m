@@ -86,7 +86,12 @@ for i_rat = 1 : n_rats
                 continue
             end
 
-            all_scalos_calculated = check_scalograms_calculated(session_name, event_list, lfp_type, probe_type, parent_directory);
+            %*************************************************************
+            % COMMENT BACK IN TO AVOID REPEATING CALCULATIONS
+            % all_scalos_calculated = check_scalograms_calculated(session_name, event_list, lfp_type, probe_type, parent_directory);
+
+
+
             % if all_scalos_calculated
             %     sprintf('all scalograms calculated for %s, %s trials', session_name, trials_to_analyze)
             %     continue

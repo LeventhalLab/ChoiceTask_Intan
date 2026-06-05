@@ -9,7 +9,8 @@ clear all
 trial_features = {'all'};
 n_trialfeatures = length(trial_features);
 
-rejection_threshold = 500;   % in microvolts
+rejection_threshold = 200;   % in microvolts
+rejection_window = [-1,1];
 
 use_log_fscale = false;
 
@@ -53,7 +54,7 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 
 num_rats = length(ratIDs);
 
-for i_rat = 4 : num_rats
+for i_rat = 1 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
 
@@ -110,9 +111,11 @@ for i_rat = 4 : num_rats
 
                 scalo_mrl_pdf_name = sprintf('%s_scalomrl_%s_%s_%s.pdf', session_name, lfp_type, trial_feature, event_name);
                 scalo_mrl_pdf_name = fullfile(scalo_plots_folder, scalo_mrl_pdf_name);
-                if exist(scalo_power_pdf_name, 'file') && exist(scalo_mrl_pdf_name, 'file')
-                    continue
-                end
+                % ********************************************************
+                % comment back in to prevent recalculating
+                % if exist(scalo_power_pdf_name, 'file') && exist(scalo_mrl_pdf_name, 'file')
+                %     continue
+                % end
 
                 switch lower(probe_type)
                     case 'nn8x8'
@@ -209,7 +212,8 @@ for i_rat = 4 : num_rats
                             nanrows = all(isnan(scalo_data.event_triggered_lfps), 2);
                             allzero_rows = all(scalo_data.event_triggered_lfps == 0, 2);
                             valid_trial_rows = ~nanrows & ~allzero_rows;
-                            valid_scalo_idx = reject_trial_lfp_artifacts(scalo_data.event_triggered_lfps, rejection_threshold);
+                            valid_scalo_idx = reject_trial_lfp_artifacts(scalo_data.event_triggered_lfps, rejection_threshold, scalo_data.t_window, ...
+                                scalo_data.fb.SamplingFrequency, rejection_window);
                             valid_scalo_idx = valid_scalo_idx(:) & ~trials_during_disconnects(:) & valid_trial_rows(:);
                             % added the colon subscript to make sure both
                             % are column vectors
