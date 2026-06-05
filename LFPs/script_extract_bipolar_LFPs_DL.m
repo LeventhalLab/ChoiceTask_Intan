@@ -19,7 +19,7 @@ target_Fs = 500;   % in Hz, target LFP sampling rate after decimating the raw si
 
 num_rats = length(ratIDs);
 
-for i_rat = 1 : num_rats
+for i_rat = 17 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
 

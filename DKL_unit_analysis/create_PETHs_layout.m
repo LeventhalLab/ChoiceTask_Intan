@@ -6,6 +6,6 @@ end
 
 h_fig = figure('units', 'inches', 'position', [1 1 11 8.5]);
 
-t = tiledlayout(8, 7);
+t = tiledlayout(8, 7, 'TileSpacing','tight', 'Padding','tight');
 
 end

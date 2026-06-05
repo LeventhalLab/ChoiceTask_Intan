@@ -113,7 +113,7 @@ for i_rat = 1 : n_rats
             probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
             n_channels = size(ordered_lfp, 1);
 
-            for i_event = 7 : length(event_list)
+            for i_event = 1 : length(event_list)
                 event_name = event_list{i_event};
                 sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
     

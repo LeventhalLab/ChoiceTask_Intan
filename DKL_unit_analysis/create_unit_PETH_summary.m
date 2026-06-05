@@ -15,9 +15,19 @@ ts = unit_struct.unitMetrics.clusterSpikes(~isnan(unit_struct.unitMetrics.cluste
 % create header strip
 ax = nexttile([1 2]);
 axis off
-text_str = sprintf('%s, %s, unit %d', ratID, session_name, unit_num);
+text_str = sprintf('%s, %s, unit %d\n# spikes = %d, mean FR = %3f\n', ratID, session_name, unit_num, ...
+    length(ts), unit_struct.unitMetrics.meanFiringRate);
 text(0.1, 0.9, text_str, 'units', 'normalized')
 
-autocorr = autocorrelogram(ts, 0.01, [-0.1, 0.1]);
-
+if unit_struct.unitMetrics.meanFiringRate < 10
+    t_win = [-1, 1];
+    bin_width = 0.05;
+else
+    t_win = [-0.2, 0.2];
+    bin_width = 0.002;
+end
+[autocorr, edges] = autocorrelogram(ts, bin_width, t_win);
+nexttile
+histogram('BinCounts', autocorr, 'BinEdges', edges)
+title('autocorrelogram')
 end

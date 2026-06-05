@@ -53,7 +53,7 @@ probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
 
 num_rats = length(ratIDs);
 
-for i_rat = 1 : num_rats
+for i_rat = 4 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(parent_directory, ratID);
 

@@ -18,7 +18,7 @@ for i_spike = 1 : length(spike_ts)
     relative_ts = ts(ts ~= ts(i_spike)) - ts(i_spike);
     relative_ts = relative_ts(relative_ts > t_win(1));
     relative_ts = relative_ts(relative_ts < t_win(2));
-    [N, edges] = histcounts(relative_ts, nbins);
+    N = histcounts(relative_ts, edges);
 
     total_counts = total_counts + N;
 end
