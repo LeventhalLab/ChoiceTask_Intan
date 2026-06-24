@@ -3,7 +3,7 @@ function [ratIDs, ratIDs_goodhisto] = get_rat_list(rats_to_analyze, parent_direc
 % update rat_nums (and hopefully not ratnums_with_bad_histo) to indicate
 % which rats should be analyzed
 
-% rat_nums = [326, 327, 372, 374, 376, 378, 379, 394, 395, 396, 411, 412, 413, 419, 420, 425];
+rat_nums = [326, 327, 372, 374, 376, 378, 379, 394, 395, 396, 411, 412, 413, 419, 420, 425];
 
 
 
@@ -27,6 +27,9 @@ if ischar(rats_to_analyze)
             % rat_nums(i_rat) = str2num(ratID(2:end));
         end
     end
+
+    return
+    
 end
 
 n_rats_with_good_histo = 0;

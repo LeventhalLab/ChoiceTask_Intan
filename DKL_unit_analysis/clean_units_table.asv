@@ -1,0 +1,39 @@
+function [outputArg1,outputArg2] = clean_units_table(unit_table)
+%UNTITLED2 Summary of this function goes here
+%   Detailed explanation goes here
+arguments (Input)
+    inputArg1
+    inputArg2
+end
+
+
+% get ratIDs from the unit table
+n_units = size(unit_table, 1);
+rat_nums = zeros(size(unit_table, 1), 1);
+
+for i_unit = 1 : n_units
+    rat_nums(i_unit) = str2num(cell2mat(extractBetween(unit_table.unitID{i_unit}, 'R0', '_')));
+end
+
+unit_table.rat_nums = rat_nums;
+
+% extract brain regions
+brain_region = cell(n_units, 1);
+
+for i_unit = 1 : n_units
+    if strcmpi(unit_table.region{i_unit}, 'otherregsions')
+        % unit is located before the underscore in the unit ID
+        unit_region = extractBefore(unit_table.unitID{i_unit}, '')
+    else
+        brain_region{i_unit} = unit_table.region{i_unit};
+    end
+
+
+
+unit_table = sortrows(unit_table, 'rat_nums');
+
+
+
+
+
+end
