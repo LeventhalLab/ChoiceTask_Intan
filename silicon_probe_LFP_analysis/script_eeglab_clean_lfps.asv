@@ -1,0 +1,87 @@
+% script to loop through LFP files and clean them using EEGlab
+choicetask_path = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
+summary_xls_dir = fullfile(choicetask_path, 'Probe Histology Summary');
+summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
+summary_xls = fullfile(summary_xls_dir, summary_xls);
+
+qc_xls = 'channels_qc_final_DL.xlsx';
+qc_xls = fullfile(summary_xls_dir, qc_xls);
+
+probe_type_sheet = 'probe_type';
+probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
+
+unit_csv_path = choicetask_path;
+unit_csv_name = 'AllROIs_unitTable.csv';
+unit_csv_name = fullfile(unit_csv_path, unit_csv_name);
+
+unit_table = read_unit_info_from_csv(unit_csv_name);
+unit_table_updated = clean_units_table(unit_table);
+
+[rat_nums, ratIDs] = get_valid_choicetraskprobe_rats();    % these are the cleanest recordings
+
+num_rats = length(ratIDs);
+
+for i_rat = 1 : num_rats
+    ratID = ratIDs{i_rat};
+    rat_folder = fullfile(choicetask_path, ratID);
+
+    if ~isfolder(rat_folder)
+        continue;
+    end
+
+    processed_folder = find_data_folder(ratID, 'processed', choicetask_path);
+    session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));
+    num_sessions = length(session_dirs);
+
+    for i_session = 1 : num_sessions
+
+        session_name = session_dirs(i_session).name;
+        cleaned_EEG_fname = sprintf('%s_cleanedEEG.mat', session_name);
+        cleaned_EEG_fname = fullfile(processed_folder, session_name, cleaned_EEG_fname);
+
+        if exist(cleaned_EEG_fname, 'file')
+            sprintf('LFPs already cleaned for %s', session_name)
+            continue
+        end
+        sprintf('cleaning %s', session_name)
+
+        cur_dir = fullfile(session_dirs(i_session).folder, session_name);
+        cd(cur_dir)
+
+        bipolar_lfp_name = sprintf('%s_bipolar_lfp.mat', session_name);
+        bipolar_lfp_name = fullfile(processed_folder, session_name, bipolar_lfp_name);
+        load(bipolar_lfp_name);
+
+        EEG = eeg_emptyset;
+
+        EEG.data = bipolar_lfp;
+        EEG.nbchan = size(bipolar_lfp, 1);
+        EEG.pnts = size(bipolar_lfp, 2);
+        EEG.srate = actual_Fs;
+        EEG.times = linspace(1/actual_Fs, EEG.pnts/actual_Fs, EEG.pnts);
+
+        trials_name = sprintf('%s_trials.mat', session_name);
+        trials_name = fullfile(processed_folder, session_name, trials_name);
+        load(trials_name);
+
+        probe_type = probe_types.probe_type(ratID==probe_types.ratID);
+        EEG.chanlocs = create_eeglab_chanlocs(probe_type, 'bipolar');
+        EEG.urchanlocs = EEG.chanlocs;
+
+        % valid_channels = valid_bipolar_from_qc(qc_channels, probe_type);
+
+        EEG.event = create_eeglab_event(trials, actual_Fs);
+        EEG.urevent = EEG.event;
+
+        EEG.xmin = -1;
+
+        EEG.filepath = fullfile(processed_folder, session_name);
+        EEG.filename = sprintf('%s_EEG.mat', session_name);
+
+        save(fullfile(EEG.filepath, EEG.filename), 'EEG');
+
+        cleaned_EEG = clean_artifacts(EEG, BurstCriterion=20);       
+        save(cleaned_EEG_fname, 'cleaned_EEG');
+
+    end
+end

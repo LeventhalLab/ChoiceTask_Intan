@@ -38,7 +38,7 @@ chanlocs(1:n_sites) = struct('theta', [], ...
 site_idx = 1;
 for i_shank = 1 : n_shanks
     for i_site = 1 : sites_per_shank
-        chanlocs(site_idx).labels = sprintf('sh%dsite%d', i_shank, i_site);
+        chanlocs(site_idx).labels = sprintf('sh%dsite%02d', i_shank, i_site);
         site_idx = site_idx + 1;
     end
 end
