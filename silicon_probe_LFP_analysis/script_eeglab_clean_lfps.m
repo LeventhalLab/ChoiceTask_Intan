@@ -1,4 +1,11 @@
 % script to loop through LFP files and clean them using EEGlab
+
+% cleaning parameters
+min_channelCriterion = 0.0;
+windowCriterion = 0.6;
+burstCriterion = 20;
+nolocs_channel_crit = 0.0;
+
 choicetask_path = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
 summary_xls_dir = fullfile(choicetask_path, 'Probe Histology Summary');
 summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
@@ -39,10 +46,10 @@ for i_rat = 1 : num_rats
         cleaned_EEG_fname = sprintf('%s_cleanedEEG.mat', session_name);
         cleaned_EEG_fname = fullfile(processed_folder, session_name, cleaned_EEG_fname);
 
-        if exist(cleaned_EEG_fname, 'file')
-            sprintf('LFPs already cleaned for %s', session_name)
-            continue
-        end
+        % if exist(cleaned_EEG_fname, 'file')
+        %     sprintf('LFPs already cleaned for %s', session_name)
+        %     continue
+        % end
         sprintf('cleaning %s', session_name)
 
         cur_dir = fullfile(session_dirs(i_session).folder, session_name);
@@ -84,7 +91,11 @@ for i_rat = 1 : num_rats
 
         save(fullfile(EEG.filepath, EEG.filename), 'EEG');
 
-        cleaned_EEG = clean_artifacts(EEG, BurstCriterion=20);       
+        cleaned_EEG = clean_artifacts(EEG, ...
+            BurstCriterion=burstCriterion, ...
+            ChannelCriterion=min_channelCriterion, ...
+            WindowCriterion=windowCriterion, ...
+            NoLocsChannelCriterion=nolocs_channel_crit);       
         save(cleaned_EEG_fname, 'cleaned_EEG');
 
     end

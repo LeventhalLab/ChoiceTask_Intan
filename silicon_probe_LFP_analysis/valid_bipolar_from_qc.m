@@ -1,10 +1,13 @@
-function valid_channels = valid_bipolar_from_qc(qc_channels, probe_type)
+function [valid_channels, invalid_times] = valid_bipolar_from_qc(valid_monopolar_channels, session_name, probe_type)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 arguments (Input)
-    qc_channels
+    valid_monopolar_channels
+    session_name
     probe_type
 end
+
+qc_channels = valid_monopolar_channels.(session_name);
 
 probe_site_mapping = probe_site_mapping_all_probes(probe_type);  % monopolar mapping
 num_sites = length(probe_site_mapping);   % assume each row is a recording channel
@@ -35,5 +38,23 @@ for i_sitecol = 1 : num_columns
         end
     end
 end
+
+% were there any detach/reattach segments for this session?
+if ~ismember('session', valid_monopolar_channels.Properties.VariableNames)
+    invalid_times = [];
+    return
+end
+attach_detach_rows = strcmp(session_name, valid_monopolar_channels.session);
+n_attach_detach = sum(attach_detach_rows);
+
+if n_attach_detach == 0
+    invalid_times = [];
+    return
+end
+
+invalid_times = zeros(n_attach_detach, 2);
+detach_times = valid_monopolar_channels.detachtime(attach_detach_rows);
+attach_times = valid_monopolar_channels.reattachtime(attach_detach_rows);
+invalid_times = [detach_times, attach_times];
 
 end

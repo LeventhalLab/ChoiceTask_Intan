@@ -1,0 +1,73 @@
+function perievent_data = extract_perievent_data_fromEEG(EEG, trials, event_name, t_window, invalid_times, Fs)
+%
+% Function to extract peri-event field potentials
+%
+% INPUTS
+%   EEG - EEG structure from eeglab
+%   trials - trials structure
+%   event_name - name of event around which to extract data and then
+%       calculate scalograms
+%   t_window - 2-element vector containing perievent start and end times
+%       e.g., to extract +/- 1 second, t_window = [-1, 1]
+%   invalid_times - n x 2 array where n is the number of user-identified
+%       bad epochs (e.g., disconnects). Stored in the channels_qc xls file
+%   Fs - sampling rate
+%
+% OUTPUTS
+%   perievent_data - m x n x p array where m is the number of trials, n is
+%       the number of channels, and p is the number of samples per trial
+
+ts = extract_trial_ts(trials, event_name);
+n_trials = length(ts);
+if ismember('urchanlocs', fieldnames(EEG))
+    n_orig_channels = length(EEG.urchanlocs);
+end
+n_channels = length(EEG.chanlocs);
+n_samples = size(EEG.data, 2);
+
+if ismember('clean_sample_mask', fieldnames(EEG.etc))
+    mask = EEG.etc.clean_sample_mask;
+    n_orig_samples = length(mask);
+else
+    mask = true(1, n_samples);
+    n_orig_samples = n_samples;
+end
+
+samp_window = round(t_window * Fs);
+center_samps = round(ts * Fs);
+
+if isrow(center_samps)
+    % make sure center_samps is a column vector so we can add samp_window
+    center_samps = center_samps';
+end
+
+samp_windows = center_samps + samp_window;
+samps_per_window = range(samp_window) + 1;
+
+perievent_data = NaN(n_trials, n_orig_channels, samps_per_window);
+
+trial_samps = false(1, n_orig_samples);
+if ~isempty(invalid_times)
+    % create a mask of user-identified bad stretches of the recording
+    invalid_mask = false(1, n_orig_samples);
+    invalid_samp_win = 
+    for ii = 1 : size(invalid_times, 1)
+        
+for i_trial = 1 : n_trials
+
+    % if window starts before start of recording or ends after end of
+    % recording, skip
+    if samp_windows(i_trial, 1) < 1 || samp_windows(i_trial, 2) > n_orig_samples || isnan(center_samps(i_trial))
+        continue
+    end
+
+    % if window includes a rejected region, skip
+    trial_samps(samp_windows(i_trial, 1) : samp_windows(i_trial, 2)) = true;
+    if any(trial_samps & ~mask)
+        % there is a region where the samples to be pulled out for this
+        % trial overlap with rejected regions
+        continue
+    end
+    perievent_data(i_trial, :, :) = ephys_data(:, samp_windows(i_trial, 1) : samp_windows(i_trial, 2));
+
+end
