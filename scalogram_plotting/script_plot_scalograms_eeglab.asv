@@ -1,0 +1,185 @@
+% script to plot scalograms based on cleaned lfp data
+use_log_fscale = true;
+
+lfp_type = 'bipolar';
+trial_type = 'correct';
+trial_feature = 'all';
+event_list = {'cueOn', 'centerIn', 'tone', 'centerOut' 'sideIn', 'sideOut', 'foodClick', 'foodRetrieval'};
+
+power_ylims = [0, 80];
+power_yticks = [0, 4, 20, 40, 80];
+power_yticklabels = {0, 4, 20, 40, 80};
+if use_log_fscale
+    power_ylims = [0 log10(power_ylims(2))];
+    power_yticks = [0, log10(power_yticks(2:end))];
+    % power_yticklabels = {0, [], [], [], power_ylims(2)};
+end
+mrl_ylims = power_ylims;
+mrl_yticks = power_yticks;
+mrl_yticklabels = power_yticklabels;
+
+
+choicetask_path = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
+summary_xls_dir = fullfile(choicetask_path, 'Probe Histology Summary');
+summary_xls = 'ProbeSite_Mapping_MATLAB_RL2.xlsx';
+summary_xls = fullfile(summary_xls_dir, summary_xls);
+
+qc_xls = 'channels_qc_final_DL.xlsx';
+qc_xls = fullfile(summary_xls_dir, qc_xls);
+
+probe_type_sheet = 'probe_type';
+probe_types = read_Jen_xls_summary(summary_xls, probe_type_sheet);
+
+unit_csv_path = choicetask_path;
+unit_csv_name = 'AllROIs_unitTable.csv';
+unit_csv_name = fullfile(unit_csv_path, unit_csv_name);
+
+unit_table = read_unit_info_from_csv(unit_csv_name);
+unit_table_updated = clean_units_table(unit_table);
+
+[rat_nums, ratIDs] = get_valid_choicetraskprobe_rats();    % these are the cleanest recordings
+
+num_rats = length(ratIDs);
+
+for i_rat = 1 : num_rats
+    ratID = ratIDs{i_rat};
+    rat_folder = fullfile(choicetask_path, ratID);
+
+    if ~isfolder(rat_folder)
+        continue;
+    end
+
+    processed_folder = find_data_folder(ratID, 'processed', choicetask_path);
+    session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));
+    num_sessions = length(session_dirs);
+
+    valid_monopolar_channels = readtable(qc_xls,sheet=ratID);
+    probe_type = probe_types.probe_type(probe_types.ratID==ratID);
+    switch lower(probe_type)
+        case 'nn8x8'
+            % 8 shanks with 8 sites each
+            sites_per_shank = 8;
+            n_shanks = 8;
+            cols_per_shank = 1;
+        case 'assy156'
+            sites_per_shank = 16;
+            n_shanks = 2;
+            cols_per_shank = 2;
+        case 'assy236'
+            sites_per_shank = 16;
+            n_shanks = 2;
+            cols_per_shank = 2;
+    end
+    switch lower(lfp_type)
+        case 'monopolar'
+            n_rows = sites_per_shank;
+        case 'bipolar'
+            n_rows = sites_per_shank - 1;
+    end
+    intan2probe_mapping = probe_site_mapping_all_probes(probe_type);
+
+    for i_session = 1 : num_sessions
+
+        session_name = session_dirs(i_session).name;
+
+        if ~ismember(session_name, valid_monopolar_channels.Properties.VariableNames)
+            sprintf('no qc channels for %s', session_name)
+            continue
+        end
+        if strcmpi(lfp_type, 'monopolar')
+            power_clims = [2, 10];
+        else
+            power_clims = [0, 5];
+        end
+        mrl_clims = [0,1];
+
+        [valid_bipolar_channels, invalid_times] = valid_bipolar_from_qc(valid_monopolar_channels, session_name, probe_type);
+        n_bipolar_channels = length(valid_bipolar_channels);
+        for i_event = 1 : length(event_list)
+            event_name = event_list{i_event};
+            scalo_folder = create_scalo_folder(session_name, event_name, choicetask_path);
+            if ~exist(scalo_folder, 'dir')
+                continue
+            end
+
+            test_scalo_name = sprintf('%s_scalos_%s_%s_shank%02d_site%02d_eeglab.mat',session_name, lfp_type, event_name, 1, 1);
+            test_scalo_name = fullfile(scalo_folder, test_scalo_name);
+            trials = load(test_scalo_name, 'trials');
+            [trials_with_feature, valid_trial_flags] = extract_trials_by_features(trials.trials, trial_feature);
+            n_trials = length(trials_with_feature);
+
+            % find the ts as
+
+            sprintf('working on session %s, event %s, %s', session_name, event_name, lfp_type)
+            trial_feature = 'all';
+            scalo_power_pdf_name = sprintf('%s_scalopower_%s_%s_%s_eeglab.pdf', session_name, lfp_type, trial_feature, event_name);
+            scalo_power_pdf_name = fullfile(scalo_plots_folder, scalo_power_pdf_name);
+
+            scalo_mrl_pdf_name = sprintf('%s_scalomrl_%s_%s_%s_eeglab.pdf', session_name, lfp_type, trial_feature, event_name);
+            scalo_mrl_pdf_name = fullfile(scalo_plots_folder, scalo_mrl_pdf_name);
+
+            [geometry_power_fig, geometry_power_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'on');
+            header_string = sprintf('%s pwr, %s, %s trials, %s, total n=%d, clim %d-%d, bold edge=invld', lfp_type, session_name, trial_feature, event_name, n_trials, power_clims(1), power_clims(2));
+            power_sgt = sgtitle(geometry_power_fig, header_string, interpreter='none', fontsize=10);
+            [geometry_mrl_fig, geometry_mrl_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'on');
+            header_string = sprintf('%s mrl, %s, %s trials, %s, n=%d, clim %d-%d, bold edge=invld', lfp_type, session_name, trial_feature, event_name, n_trials, mrl_clims(1), mrl_clims(2));
+            mrl_sgt = sgtitle(geometry_mrl_fig, header_string, interpreter='none', fontsize=10);
+
+            for i_channel = 1 : n_bipolar_channels
+
+                probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
+                [shank_num, site_num] = get_shank_and_site_num(probe_lfp_type, i_channel);
+
+                col_num = (i_shank-1) * cols_per_shank + i_shankcol;
+                if strcmpi(lfp_type, 'monopolar')
+                    original_channel_num = map_shanksite2channel(col_num, i_site, probe_type);
+                else
+                    original_channel_num = [map_shanksite2channel(col_num, i_site, probe_type), map_shanksite2channel(col_num, i_site+1, probe_type)];
+                end
+
+                scalo_name = sprintf('%s_scalos_%s_%s_shank%02d_site%02d_eeglab.mat',session_name, lfp_type, event_name, shank_num, site_num);
+                scalo_name = fullfile(scalo_folder, scalo_name);
+
+                if ~exist(scalo_name, 'file')
+                    continue
+                end
+
+                load(scalo_name);
+                n_samples = size(event_related_scalos, 3);
+                t = linspace(t_window(1), t_window(2), n_samples);
+                f = centerFrequencies(fb);
+
+                Fs = fb.SamplingFrequency;
+
+                t_ticks = [t_window(1), 0, t_window(2)];
+                t_labels = [t_window(1), 0, t_window(2)];
+
+                % WORKING HERE...
+                % trials_during_disconnects = find_trials_during_disconnects(session_qc_check, ...
+                %     session_name, ...
+                %     trials, ...
+                %     event_list{i_event}, ...
+                %     scalo_data.t_window);
+                % if isempty(trials_during_disconnects)
+                %     % no trials with this event
+                %     continue
+                % end
+
+                % find 
+
+                [site_xyz,region_name] = site_anatomy_from_probe_mapping(original_channel_num, site_anatomy_table);
+                is_valid_chan = all(valid_channels(original_channel_num));
+
+                valid_scalos_bool = get_valid_scalos_eeglab(event_triggered_lfps_cleaned, ...
+                                              event_triggered_lfps_orig, ...
+                                              trials, ...
+                                              trial_feature, ...
+                                              event_ts, ...
+                                              invalid_times, ...   % stored in the scalo .mat file; contains disconnect times
+                                              clean_sample_mask, ...
+                                              Fs);
+
+            end
+        end
+    end
+end

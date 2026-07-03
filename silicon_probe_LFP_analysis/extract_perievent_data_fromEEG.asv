@@ -1,6 +1,7 @@
 function perievent_data = extract_perievent_data_fromEEG(EEG, trials, event_name, t_window, invalid_times, Fs)
 %
-% Function to extract peri-event field potentials
+% Function to extract peri-event field potentials from a (possibly) cleaned
+% eeglab data structure
 %
 % INPUTS
 %   EEG - EEG structure from eeglab
@@ -25,13 +26,27 @@ end
 n_channels = length(EEG.chanlocs);
 n_samples = size(EEG.data, 2);
 
-if ismember('clean_sample_mask', fieldnames(EEG.etc))
+if isempty(EEG.etc)
+    mask = true(1, n_samples);
+    n_orig_samples = n_samples;
+elseif ismember('clean_sample_mask', fieldnames(EEG.etc))
     mask = EEG.etc.clean_sample_mask;
     n_orig_samples = length(mask);
 else
     mask = true(1, n_samples);
     n_orig_samples = n_samples;
 end
+
+% below code keeps track of any channels rejected by clean_artifacts. Not
+% sure if this is actually needed here as long as we keep track of which
+% channels were eliminated
+% if ismember('clean_channel_mask', fieldnames(EEG.etc))
+%     channel_mask = EEG.etc.clean_channel_mask;
+%     n_orig_channels = length(channel_mask);
+% else
+%     channel_mask = true(n_channels, 1);
+%     n_orig_channels = n_channels;
+% end
 
 samp_window = round(t_window * Fs);
 center_samps = round(ts * Fs);
@@ -44,30 +59,53 @@ end
 samp_windows = center_samps + samp_window;
 samps_per_window = range(samp_window) + 1;
 
-perievent_data = NaN(n_trials, n_orig_channels, samps_per_window);
+perievent_data = NaN(n_trials, n_channels, samps_per_window);
 
 trial_samps = false(1, n_orig_samples);
 if ~isempty(invalid_times)
     % create a mask of user-identified bad stretches of the recording
     invalid_mask = false(1, n_orig_samples);
-    invalid_samp_win = 
+    invalid_samp_win = round(invalid_times * Fs);
     for ii = 1 : size(invalid_times, 1)
-        
+        invalid_mask(invalid_samp_win(ii, 1) : invalid_samp_win(ii,2)) = true;
+    end
+    invalid_mask = invalid_mask | ~mask;
+else
+    invalid_mask = ~mask;
+end
+
+ts_to_invalidate = false(n_trials, 1);
 for i_trial = 1 : n_trials
 
     % if window starts before start of recording or ends after end of
     % recording, skip
     if samp_windows(i_trial, 1) < 1 || samp_windows(i_trial, 2) > n_orig_samples || isnan(center_samps(i_trial))
+        ts_to_invalidate(i_trial) = true;
         continue
     end
 
-    % if window includes a rejected region, skip
-    trial_samps(samp_windows(i_trial, 1) : samp_windows(i_trial, 2)) = true;
-    if any(trial_samps & ~mask)
-        % there is a region where the samples to be pulled out for this
-        % trial overlap with rejected regions
-        continue
+    % if window includes a rejected region, note that
+    % trial_samps(samp_windows(i_trial, 1) : samp_windows(i_trial, 2)) = true;
+    % if any(trial_samps & invalid_mask)
+    %     % there is a region where the samples to be pulled out for this
+    %     % trial overlap with rejected regions
+    %     trial_samps(samp_windows(i_trial, 1) : samp_windows(i_trial, 2)) = false;
+    %     continue
+    % end
+    % trial_samps(samp_windows(i_trial, 1) : samp_windows(i_trial, 2)) = false;
+
+    % adjust for any segments that were removed
+    clean_sample_start = sum(mask(1:samp_windows(i_trial, 1)));
+    clean_sample_end = sum(mask(1:samp_windows(i_trial, 2)));
+    if (clean_sample_end - clean_sample_start) < (samps_per_window - 1)
+        % "mask" indicates an artifact region within the current sample
+        % window, so make this trial a row on NaNs
+        perievent_data(i_trial, :, :) = NaN;
+    else
+        perievent_data(i_trial, :, :) = EEG.data(:, clean_sample_start : clean_sample_end);
     end
-    perievent_data(i_trial, :, :) = ephys_data(:, samp_windows(i_trial, 1) : samp_windows(i_trial, 2));
 
 end
+
+valid_ts = ts;
+valid_ts(ts_to_invalidate) = [];

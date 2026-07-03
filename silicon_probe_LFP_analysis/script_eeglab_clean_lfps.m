@@ -46,6 +46,8 @@ for i_rat = 1 : num_rats
         cleaned_EEG_fname = sprintf('%s_cleanedEEG.mat', session_name);
         cleaned_EEG_fname = fullfile(processed_folder, session_name, cleaned_EEG_fname);
 
+        EEG_preASR_fname = sprintf('%s_EEGpreASR.mat', session_name);
+        EEG_preASR_fname = fullfile(processed_folder, session_name, EEG_preASR_fname);
         % if exist(cleaned_EEG_fname, 'file')
         %     sprintf('LFPs already cleaned for %s', session_name)
         %     continue
@@ -95,8 +97,15 @@ for i_rat = 1 : num_rats
             BurstCriterion=burstCriterion, ...
             ChannelCriterion=min_channelCriterion, ...
             WindowCriterion=windowCriterion, ...
-            NoLocsChannelCriterion=nolocs_channel_crit);       
+            NoLocsChannelCriterion=nolocs_channel_crit);
+        EEG_preASR = clean_artifacts(EEG, ...
+            'BurstCriterion', 'off', ...
+            'WindowCriterion', 'off', ...
+            'ChannelCriterion', min_channelCriterion, ...
+            'NoLocsChannelCriterion', nolocs_channel_crit);
+        
         save(cleaned_EEG_fname, 'cleaned_EEG');
+        save(EEG_preASR_fname, 'EEG_preASR');
 
     end
 end

@@ -14,6 +14,10 @@ real_event_related_scalos = zeros(num_trials, num_freqs, samples_per_event);
 event_related_scalos = complex(real_event_related_scalos, 0);
 
 for i_trial = 1 : num_trials
+    if any(isnan(event_triggered_lfps(i_trial,:)))
+        % prevents error 
+        continue
+    end
     [event_related_scalos(i_trial, :, :), ~, coi] = wt(fb, squeeze(event_triggered_lfps(i_trial, :)));
 end
 

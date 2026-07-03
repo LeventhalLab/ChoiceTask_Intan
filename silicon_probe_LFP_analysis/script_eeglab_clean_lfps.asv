@@ -2,8 +2,8 @@
 
 % cleaning parameters
 min_channelCriterion = 0.0;
-windowCriterion = 0.3;
-burstCriterion = 40;
+windowCriterion = 0.6;
+burstCriterion = 20;
 nolocs_channel_crit = 0.0;
 
 choicetask_path = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
@@ -28,7 +28,7 @@ unit_table_updated = clean_units_table(unit_table);
 
 num_rats = length(ratIDs);
 
-for i_rat = 5 : num_rats
+for i_rat = 1 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(choicetask_path, ratID);
 
@@ -40,12 +40,14 @@ for i_rat = 5 : num_rats
     session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));
     num_sessions = length(session_dirs);
 
-    for i_session = 1 : num_sessions
+    for i_session = 2 : num_sessions
 
         session_name = session_dirs(i_session).name;
         cleaned_EEG_fname = sprintf('%s_cleanedEEG.mat', session_name);
         cleaned_EEG_fname = fullfile(processed_folder, session_name, cleaned_EEG_fname);
 
+        EEG_preASR_fname = sprintf('%s_EEGpreASR.mat', session_name);
+        EEG_preASR_fname = fullfile(processed_folder, session_name, EEG_preASR_fname);
         % if exist(cleaned_EEG_fname, 'file')
         %     sprintf('LFPs already cleaned for %s', session_name)
         %     continue
@@ -91,8 +93,19 @@ for i_rat = 5 : num_rats
 
         save(fullfile(EEG.filepath, EEG.filename), 'EEG');
 
-        cleaned_EEG = clean_artifacts(EEG, BurstCriterion=burstCriterion, ChannelCriterion=min_channelCriterion, WindowCriterion=windowCriterion);       
+        cleaned_EEG = clean_artifacts(EEG, ...
+            BurstCriterion=burstCriterion, ...
+            ChannelCriterion=min_channelCriterion, ...
+            WindowCriterion=windowCriterion, ...
+            NoLocsChannelCriterion=nolocs_channel_crit);
+        EEG_preASR = clean_artifacts(EEG, ...
+            'BurstCriterion', 'off', ...
+            'WindowCriterion', 'off', ...
+            'ChannelCriterion', min_channelCriterion, ...
+            'NoLocsChannelCriterion', nolocs_channel_crit);
+        
         save(cleaned_EEG_fname, 'cleaned_EEG');
+        save(EEG_preASR_fname, 'EEG_preASR');
 
-    end
+    33end
 end

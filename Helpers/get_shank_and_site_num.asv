@@ -1,4 +1,4 @@
-function [column_num,site_num] = get_shank_and_site_num(probe_lfp_type, row_idx)
+ function [column_num,site_num] = get_shank_and_site_num(probe_lfp_type, row_idx)
 %UNTITLED7 Summary of this function goes here
 % INPUTS
 %   probe_lfp_type - probetype_LFPtype where probetype is e.g., NN8x8,
