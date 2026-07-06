@@ -1,4 +1,6 @@
 % script to check/analyze cleaned EEG files
+% run this after script_eeglab_clean_lfps.m
+% and before script_plot_scalograms_eeglab.m
 t_window = [-2.5, 2.5];    % time windows for peri-event lfp extraction
 event_list = {'cueOn', 'centerIn', 'tone', 'centerOut' 'sideIn', 'sideOut', 'foodClick', 'foodRetrieval'};
 lfp_type = 'bipolar';
@@ -25,7 +27,7 @@ unit_table_updated = clean_units_table(unit_table);
 
 num_rats = length(ratIDs);
 
-for i_rat = 1 : num_rats
+for i_rat = 3 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(choicetask_path, ratID);
 
@@ -41,7 +43,12 @@ for i_rat = 1 : num_rats
     probe_type = probe_types.probe_type(probe_types.ratID==ratID);
     intan2probe_mapping = probe_site_mapping_all_probes(probe_type);
 
-    for i_session = 1 : num_sessions
+    if i_rat == 3
+        start_session = 11;
+    else
+        start_session = 1;
+    end
+    for i_session = start_session : num_sessions
 
         session_name = session_dirs(i_session).name;
 
@@ -94,7 +101,7 @@ for i_rat = 1 : num_rats
             'wavelet','amor',...
             'frequencylimits', [1, 100]);
 
-        for i_event = 1 : length(event_list)
+        for i_event = 3 : length(event_list)
             event_name = event_list{i_event};
 
             perievent_data_cleaned = extract_perievent_data_fromEEG(cleaned_EEG, trials, event_name, t_window, invalid_times, Fs);
@@ -110,7 +117,7 @@ for i_rat = 1 : num_rats
                 mkdir(scalo_folder)
             end
 
-            for i_channel = 1 : n_channels
+            for i_channel = 59 : n_channels
                 if isfield(cleaned_EEG.etc, 'clean_channel_mask')
                     if ~cleaned_EEG.etc.clean_channel_mask(i_channel)
                         sprintf('channel %d was removed by clean_artifacts for %s', i_channel, session_name)

@@ -1,5 +1,7 @@
 % script to plot scalograms based on cleaned lfp data
+% run this after script_analyze_cleanedEEG.m
 use_log_fscale = true;
+reject_threshold = 500;  % threshold for difference between preASR and cleaned data; differences larger than this will lead to trial rejection
 
 lfp_type = 'bipolar';
 trial_type = 'correct';
@@ -133,6 +135,13 @@ for i_rat = 1 : num_rats
             header_string = sprintf('%s mrl, %s, %s trials, %s, n=%d, clim %d-%d, bold edge=invld', lfp_type, session_name, trial_feature, event_name, n_trials, mrl_clims(1), mrl_clims(2));
             mrl_sgt = sgtitle(geometry_mrl_fig, header_string, interpreter='none', fontsize=10);
 
+            % [geometry_power_fig, geometry_power_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'on');
+            % header_string = sprintf('%s pwr, %s, %s trials, %s, total n=%d, clim %d-%d, bold edge=invld', lfp_type, session_name, trial_feature, event_name, n_trials, power_clims(1), power_clims(2));
+            % power_sgt = sgtitle(geometry_power_fig, header_string, interpreter='none', fontsize=10);
+            % [geometry_mrl_fig, geometry_mrl_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'on');
+            % header_string = sprintf('%s mrl, %s, %s trials, %s, n=%d, clim %d-%d, bold edge=invld', lfp_type, session_name, trial_feature, event_name, n_trials, mrl_clims(1), mrl_clims(2));
+            % mrl_sgt = sgtitle(geometry_mrl_fig, header_string, interpreter='none', fontsize=10);
+
             for i_channel = 1 : n_bipolar_channels
 
                 probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
@@ -177,15 +186,117 @@ for i_rat = 1 : num_rats
                 [site_xyz,region_name] = site_anatomy_from_probe_mapping(original_channel_num, site_anatomy_table);
                 % is_valid_chan = all(valid_channels(original_channel_num));
 
-                valid_scalos_bool = get_valid_scalos_eeglab(event_triggered_lfps_cleaned, ...
-                                              event_triggered_lfps_orig, ...
+                [valid_scalos_bool, valid_scalos_bool_preASRreject] = get_valid_scalos_eeglab(event_triggered_lfps_cleaned, ...
+                                              event_triggered_lfps_preASR, ...
                                               trials, ...
                                               trial_feature, ...
                                               event_ts, ...
                                               invalid_times, ...   % stored in the scalo .mat file; contains disconnect times
                                               clean_sample_mask, ...
                                               Fs, ...
-                                              t_window);
+                                              t_window, ...
+                                              reject_threshold);   % threshold for difference between preASR and cleaned data; differences larger than this will lead to trial rejection
+
+                % valid_scalos_matrix = event_triggered_lfps_cleaned(valid_scalos_bool, :);
+
+                valid_scalos = event_related_scalos(valid_scalos_bool, :, :);
+                n_valid_scalos = size(valid_scalos, 1);
+
+                scalo_amplitudes = abs(valid_scalos);
+                scalo_power = scalo_amplitudes .^ 2;
+                scalo_phases = angle(valid_scalos);
+
+                mean_power = mean(scalo_power, 1, 'omitnan');
+                if ~ismatrix(mean_power)
+                    mean_power = squeeze(mean_power);
+                end
+                mean_phases = circ_mean(scalo_phases, [], 1);
+                mrl = circ_r(scalo_phases, [], [], 1);
+                if ~ismatrix(mrl)
+                    mrl = squeeze(mrl);
+                end
+
+                figure(geometry_power_fig)
+                set(geometry_power_fig, 'CurrentAxes', geometry_power_axs(site_num, shank_num))
+                h_power = pcolor(t, f, log10(mean_power));
+                colormap('jet')
+                clim(power_clims)
+                h_power.EdgeColor = 'none';
+                set(gca,'yscale', 'log');
+                set(gca,ydir='normal',...
+                    YLim=power_ylims,...
+                    YTick=power_yticks,...
+                    yticklabels=power_yticklabels,...
+                    XLim=t_window);
+                if shank_num > 1
+                    set(gca,yticklabels=[]);
+                end
+                if site_num < sites_per_shank
+                    set(gca, XTick=t_ticks, xticklabels=[]);
+                else
+                    set(gca, XTick=t_ticks, xticklabels=t_ticks)
+                end
+                text_x = 0.025;
+                text_y = 1.04;
+                n_regions = length(region_name);
+                region_str = region_name{1};
+                if length(region_name) == 2
+                    region_str = sprintf('%s, %s', region_str, region_name{2});
+                end
+                text_str = sprintf('%s, n = %d',region_str, n_valid_scalos);
+                text(text_x, text_y, text_str, units="normalized", ...
+                    FontSize=7, Color='k');
+                if site_num == n_rows
+                    % last row, keep the x-labels
+                    set(gca,'xtick',t_ticks,'xticklabel',t_labels,'fontsize',7)
+                    xlabel('time (s)',FontSize=7)
+                end
+
+                % plot the mrl panel
+                figure(geometry_mrl_fig)
+                set(geometry_mrl_fig, 'CurrentAxes', geometry_mrl_axs(site_num, shank_num))
+                h_power = pcolor(t, f, mrl);
+                colormap('jet')
+                clim(mrl_clims)
+                h_power.EdgeColor = 'none';
+                set(gca,'yscale', 'log');
+                % imagesc(t, f, mrl, mrl_clims)
+                set(gca,ydir='normal',...
+                    YLim=mrl_ylims,...
+                    YTick=mrl_yticks,...
+                    yticklabels=mrl_yticklabels,...
+                    XLim=t_window);
+                if shank_num > 1
+                    set(gca,yticklabels=[]);
+                end
+                if site_num < sites_per_shank
+                    set(gca, XTick=t_ticks, xticklabels=[]);
+                else
+                    set(gca, XTick=t_ticks, xticklabels=t_ticks)
+                end
+                text(text_x, text_y, text_str, units="normalized", ...
+                    FontSize=7, Color='k')
+                if site_num == n_rows
+                    % last row, keep the x-labels
+                    set(gca,'xtick',t_ticks,'xticklabel',t_labels,'fontsize',7)
+                    xlabel('time (s)',FontSize=7)
+                end
+
+                if strcmpi(lfp_type, 'monopolar')
+                    if ~valid_channels(original_channel_num)
+                        % this was an invalid channel, mark it in
+                        % the plot with a bold border
+                        set(gca,'linewidth', 3)
+                    end
+                else
+                    % do the same for bipolar
+                    if ~valid_channels(original_channel_num(1)) || ~valid_channels(original_channel_num(2))
+                        % one of the channels that went into
+                        % this bipolar calculation was bad
+                        set(gca,'linewidth', 3)
+                    end
+                end
+
 
             end
         end

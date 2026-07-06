@@ -164,7 +164,7 @@ for i_rat = 3 : num_rats
                 [geometry_mrl_fig, geometry_mrl_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'on');
                 header_string = sprintf('%s mrl, %s, %s trials, %s, n=%d, clim %d-%d, bold edge=invld', lfp_type, session_name, trial_feature, event_name, n_trials, mrl_clims(1), mrl_clims(2));
                 mrl_sgt = sgtitle(geometry_mrl_fig, header_string, interpreter='none', fontsize=10);
-                for i_shank = 1 : n_shanks
+                for i_shank = 2 : n_shanks
                     for i_shankcol = 1 : cols_per_shank
                         for i_site = 1 : n_rows
     

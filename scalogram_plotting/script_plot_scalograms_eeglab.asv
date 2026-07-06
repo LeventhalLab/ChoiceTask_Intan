@@ -1,4 +1,5 @@
 % script to plot scalograms based on cleaned lfp data
+% run this after script_analyze_cleanedEEG.m
 use_log_fscale = true;
 
 lfp_type = 'bipolar';
@@ -55,6 +56,10 @@ for i_rat = 1 : num_rats
 
     valid_monopolar_channels = readtable(qc_xls,sheet=ratID);
     probe_type = probe_types.probe_type(probe_types.ratID==ratID);
+
+    rat_sheet_name = strcat(ratID, '_finished');
+    site_anatomy_table = read_Jen_xls_summary(summary_xls, rat_sheet_name);
+
     switch lower(probe_type)
         case 'nn8x8'
             % 8 shanks with 8 sites each
@@ -101,6 +106,10 @@ for i_rat = 1 : num_rats
             if ~exist(scalo_folder, 'dir')
                 continue
             end
+            scalo_plots_folder = create_scalo_plots_folder(session_name, event_name, choicetask_path);
+            if ~exist(scalo_plots_folder, 'dir')
+                status = mkdir(scalo_plots_folder);
+            end
 
             test_scalo_name = sprintf('%s_scalos_%s_%s_shank%02d_site%02d_eeglab.mat',session_name, lfp_type, event_name, 1, 1);
             test_scalo_name = fullfile(scalo_folder, test_scalo_name);
@@ -130,11 +139,10 @@ for i_rat = 1 : num_rats
                 probe_lfp_type = sprintf('%s_%s', probe_type, lfp_type);
                 [shank_num, site_num] = get_shank_and_site_num(probe_lfp_type, i_channel);
 
-                col_num = (i_shank-1) * cols_per_shank + i_shankcol;
                 if strcmpi(lfp_type, 'monopolar')
-                    original_channel_num = map_shanksite2channel(col_num, i_site, probe_type);
+                    original_channel_num = map_shanksite2channel(shank_num, site_num, probe_type);
                 else
-                    original_channel_num = [map_shanksite2channel(col_num, i_site, probe_type), map_shanksite2channel(col_num, i_site+1, probe_type)];
+                    original_channel_num = [map_shanksite2channel(shank_num, site_num, probe_type), map_shanksite2channel(shank_num, site_num+1, probe_type)];
                 end
 
                 scalo_name = sprintf('%s_scalos_%s_%s_shank%02d_site%02d_eeglab.mat',session_name, lfp_type, event_name, shank_num, site_num);
@@ -168,16 +176,18 @@ for i_rat = 1 : num_rats
                 % find 
 
                 [site_xyz,region_name] = site_anatomy_from_probe_mapping(original_channel_num, site_anatomy_table);
-                is_valid_chan = all(valid_channels(original_channel_num));
+                % is_valid_chan = all(valid_channels(original_channel_num));
 
                 valid_scalos_bool = get_valid_scalos_eeglab(event_triggered_lfps_cleaned, ...
-                                              event_triggered_lfps_orig, ...
+                                              event_triggered_lfps_preASR, ...
                                               trials, ...
                                               trial_feature, ...
                                               event_ts, ...
                                               invalid_times, ...   % stored in the scalo .mat file; contains disconnect times
                                               clean_sample_mask, ...
-                                              Fs);
+                                              Fs, ...
+                                              t_window, ...
+                                              reject_threshold);
 
             end
         end
