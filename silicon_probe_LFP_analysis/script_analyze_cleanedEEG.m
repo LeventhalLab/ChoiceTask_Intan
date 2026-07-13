@@ -27,7 +27,7 @@ unit_table_updated = clean_units_table(unit_table);
 
 num_rats = length(ratIDs);
 
-for i_rat = 3 : num_rats
+for i_rat = 2 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(choicetask_path, ratID);
 
@@ -43,8 +43,10 @@ for i_rat = 3 : num_rats
     probe_type = probe_types.probe_type(probe_types.ratID==ratID);
     intan2probe_mapping = probe_site_mapping_all_probes(probe_type);
 
-    if i_rat == 3
-        start_session = 11;
+    if i_rat == 4
+        start_session = 1;
+    elseif i_rat == 2
+        start_session = 12;
     else
         start_session = 1;
     end
@@ -101,7 +103,12 @@ for i_rat = 3 : num_rats
             'wavelet','amor',...
             'frequencylimits', [1, 100]);
 
-        for i_event = 3 : length(event_list)
+        if i_rat == 4 && i_session == 15
+            start_event = 1;
+        else
+            start_event = 1;
+        end
+        for i_event = start_event : length(event_list)
             event_name = event_list{i_event};
 
             perievent_data_cleaned = extract_perievent_data_fromEEG(cleaned_EEG, trials, event_name, t_window, invalid_times, Fs);
@@ -117,7 +124,7 @@ for i_rat = 3 : num_rats
                 mkdir(scalo_folder)
             end
 
-            for i_channel = 59 : n_channels
+            for i_channel = 1 : n_channels
                 if isfield(cleaned_EEG.etc, 'clean_channel_mask')
                     if ~cleaned_EEG.etc.clean_channel_mask(i_channel)
                         sprintf('channel %d was removed by clean_artifacts for %s', i_channel, session_name)
@@ -164,7 +171,7 @@ for i_rat = 3 : num_rats
                     'cleanedEEG_channel',...        % channel index in the cleaned_EEG data array; channel index in the original EEG data array is just i_channel
                     'qc_channels');
 % is there anything in cleaned_EEG that should be saved besides the data?
-
+            
             end
 
         end

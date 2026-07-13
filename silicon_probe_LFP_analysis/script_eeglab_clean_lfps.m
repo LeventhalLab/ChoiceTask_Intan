@@ -1,10 +1,12 @@
 % script to loop through LFP files and clean them using EEGlab
 
 % cleaning parameters
-min_channelCriterion = 0.0;
+min_channelCriterion = 'off'; %0.0;
 windowCriterion = 0.6;
 burstCriterion = 20;
 nolocs_channel_crit = 0.0;
+FlatlineCriterion = 'off';
+LineNoiseCriterion = 'off';
 
 choicetask_path = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
 summary_xls_dir = fullfile(choicetask_path, 'Probe Histology Summary');
@@ -28,7 +30,7 @@ unit_table_updated = clean_units_table(unit_table);
 
 num_rats = length(ratIDs);
 
-for i_rat = 1 : num_rats
+for i_rat = 2 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(choicetask_path, ratID);
 
@@ -40,7 +42,7 @@ for i_rat = 1 : num_rats
     session_dirs = dir(fullfile(processed_folder, strcat(ratID, '*')));
     num_sessions = length(session_dirs);
 
-    for i_session = 1 : num_sessions
+    for i_session = 10 : num_sessions
 
         session_name = session_dirs(i_session).name;
         cleaned_EEG_fname = sprintf('%s_cleanedEEG.mat', session_name);
@@ -97,12 +99,16 @@ for i_rat = 1 : num_rats
             BurstCriterion=burstCriterion, ...
             ChannelCriterion=min_channelCriterion, ...
             WindowCriterion=windowCriterion, ...
-            NoLocsChannelCriterion=nolocs_channel_crit);
+            NoLocsChannelCriterion=nolocs_channel_crit,...
+            FlatlineCriterion=FlatlineCriterion, ...
+            LineNoiseCriterion=LineNoiseCriterion);
         EEG_preASR = clean_artifacts(EEG, ...
             'BurstCriterion', 'off', ...
             'WindowCriterion', 'off', ...
             'ChannelCriterion', min_channelCriterion, ...
-            'NoLocsChannelCriterion', nolocs_channel_crit);
+            'NoLocsChannelCriterion', nolocs_channel_crit,...
+            'FlatlineCriterion', FlatlineCriterion, ...
+            'LineNoiseCriterion', LineNoiseCriterion);
         
         save(cleaned_EEG_fname, 'cleaned_EEG');
         save(EEG_preASR_fname, 'EEG_preASR');

@@ -1,6 +1,6 @@
 % script to plot scalograms based on cleaned lfp data
 % run this after script_analyze_cleanedEEG.m
-use_log_fscale = true;
+use_log_fscale = false;
 reject_threshold = 500;  % threshold for difference between preASR and cleaned data; differences larger than this will lead to trial rejection
 
 lfp_type = 'bipolar';
@@ -8,17 +8,19 @@ trial_type = 'correct';
 trial_feature = 'all';
 event_list = {'cueOn', 'centerIn', 'tone', 'centerOut' 'sideIn', 'sideOut', 'foodClick', 'foodRetrieval'};
 
-power_ylims = [0, 80];
-power_yticks = [0, 4, 20, 40, 80];
-power_yticklabels = {0, 4, 20, 40, 80};
+% power_ylims = [0, 100];
+power_yticks = [4, 20, 40, 80];
+power_yticklabels = string(power_yticks);
 if use_log_fscale
-    power_ylims = [0 log10(power_ylims(2))];
+    % power_ylims = [0 log10(power_ylims(2))];
     power_yticks = [0, log10(power_yticks(2:end))];
     % power_yticklabels = {0, [], [], [], power_ylims(2)};
 end
-mrl_ylims = power_ylims;
+% mrl_ylims = power_ylims;
 mrl_yticks = power_yticks;
 mrl_yticklabels = power_yticklabels;
+
+plot_window = [-1,1];
 
 
 choicetask_path = '\\corexfs.med.umich.edu\SharedX\Neuro-Leventhal\data\ChoiceTask';
@@ -128,6 +130,11 @@ for i_rat = 1 : num_rats
             scalo_mrl_pdf_name = sprintf('%s_scalomrl_%s_%s_%s_eeglab.pdf', session_name, lfp_type, trial_feature, event_name);
             scalo_mrl_pdf_name = fullfile(scalo_plots_folder, scalo_mrl_pdf_name);
 
+            if exist(scalo_power_pdf_name, 'file') && exist(scalo_mrl_pdf_name, 'file')
+                sprintf('already created plots for %s', session_name)
+                continue
+            end
+
             [geometry_power_fig, geometry_power_axs] = create_single_event_scalogram_panels(n_rows, cols_per_shank, n_shanks, 'visible', 'on');
             header_string = sprintf('%s pwr, %s, %s trials, %s, total n=%d, clim %d-%d, bold edge=invld', lfp_type, session_name, trial_feature, event_name, n_trials, power_clims(1), power_clims(2));
             power_sgt = sgtitle(geometry_power_fig, header_string, interpreter='none', fontsize=10);
@@ -164,6 +171,9 @@ for i_rat = 1 : num_rats
                 n_samples = size(event_related_scalos, 3);
                 t = linspace(t_window(1), t_window(2), n_samples);
                 f = centerFrequencies(fb);
+                power_ylims = [0, max(f)];
+
+                ytick_indices = interp1(flip(f), 1:length(f), power_yticks);
 
                 Fs = fb.SamplingFrequency;
 
@@ -218,16 +228,17 @@ for i_rat = 1 : num_rats
 
                 figure(geometry_power_fig)
                 set(geometry_power_fig, 'CurrentAxes', geometry_power_axs(site_num, shank_num))
-                h_power = pcolor(t, f, log10(mean_power));
+                % h_power = pcolor(t, f, log10(mean_power));
+                h_power = imagesc(t, length(f):-1:1, log10(mean_power));
                 colormap('jet')
                 clim(power_clims)
-                h_power.EdgeColor = 'none';
-                set(gca,'yscale', 'log');
+                % h_power.EdgeColor = 'none';
+                % set(gca,'yscale', 'log');
                 set(gca,ydir='normal',...
-                    YLim=power_ylims,...
-                    YTick=power_yticks,...
+                    YLim=[1, length(f)],...
+                    YTick=ytick_indices,...
                     yticklabels=power_yticklabels,...
-                    XLim=t_window);
+                    XLim=plot_window);
                 if shank_num > 1
                     set(gca,yticklabels=[]);
                 end
@@ -255,17 +266,18 @@ for i_rat = 1 : num_rats
                 % plot the mrl panel
                 figure(geometry_mrl_fig)
                 set(geometry_mrl_fig, 'CurrentAxes', geometry_mrl_axs(site_num, shank_num))
-                h_power = pcolor(t, f, mrl);
+                % h_power = pcolor(t, f, mrl);
+                h_mrl = imagesc(t, length(f):-1:1, mrl);
                 colormap('jet')
                 clim(mrl_clims)
-                h_power.EdgeColor = 'none';
-                set(gca,'yscale', 'log');
+                % h_mrl.EdgeColor = 'none';
+                % set(gca,'yscale', 'log');
                 % imagesc(t, f, mrl, mrl_clims)
                 set(gca,ydir='normal',...
-                    YLim=mrl_ylims,...
-                    YTick=mrl_yticks,...
+                    YLim=[1, length(f)],...
+                    YTick=ytick_indices,...
                     yticklabels=mrl_yticklabels,...
-                    XLim=t_window);
+                    XLim=plot_window);
                 if shank_num > 1
                     set(gca,yticklabels=[]);
                 end
@@ -283,14 +295,14 @@ for i_rat = 1 : num_rats
                 end
 
                 if strcmpi(lfp_type, 'monopolar')
-                    if ~valid_channels(original_channel_num)
+                    if ~valid_monopolar_channels(original_channel_num)   % check this - may not be right (but who cares if we don't look at monopolar lfp's)
                         % this was an invalid channel, mark it in
                         % the plot with a bold border
                         set(gca,'linewidth', 3)
                     end
                 else
                     % do the same for bipolar
-                    if ~valid_channels(original_channel_num(1)) || ~valid_channels(original_channel_num(2))
+                    if ~valid_bipolar_channels(i_channel)
                         % one of the channels that went into
                         % this bipolar calculation was bad
                         set(gca,'linewidth', 3)
@@ -299,6 +311,16 @@ for i_rat = 1 : num_rats
 
 
             end
+            % print(geometry_power_fig, scalo_power_pdf_name, '-dpdf')
+            % print(geometry_mrl_fig, scalo_mrl_pdf_name, '-dpdf')
+            exportgraphics(geometry_power_fig, scalo_power_pdf_name, ContentType='image')
+            exportgraphics(geometry_mrl_fig, scalo_mrl_pdf_name, ContentType='image')
+            scalo_power_fig_name = replace(scalo_power_pdf_name, '.pdf', '.fig');
+            scalo_mrl_fig_name = replace(scalo_mrl_pdf_name, '.pdf', '.fig');
+            savefig(geometry_power_fig, scalo_power_fig_name)
+            savefig(geometry_mrl_fig, scalo_mrl_fig_name)
+            close(geometry_power_fig)
+            close(geometry_mrl_fig)
         end
     end
 end
