@@ -27,7 +27,7 @@ unit_table_updated = clean_units_table(unit_table);
 
 num_rats = length(ratIDs);
 
-for i_rat = 2 : num_rats
+for i_rat = 5 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(choicetask_path, ratID);
 
@@ -45,8 +45,8 @@ for i_rat = 2 : num_rats
 
     if i_rat == 4
         start_session = 1;
-    elseif i_rat == 2
-        start_session = 12;
+    elseif i_rat == 5
+        start_session = 1;
     else
         start_session = 1;
     end
