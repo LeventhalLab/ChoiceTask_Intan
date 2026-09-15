@@ -27,7 +27,7 @@ unit_table_updated = clean_units_table(unit_table);
 
 num_rats = length(ratIDs);
 
-for i_rat = 5 : num_rats
+for i_rat = 15 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(choicetask_path, ratID);
 
@@ -43,9 +43,7 @@ for i_rat = 5 : num_rats
     probe_type = probe_types.probe_type(probe_types.ratID==ratID);
     intan2probe_mapping = probe_site_mapping_all_probes(probe_type);
 
-    if i_rat == 4
-        start_session = 1;
-    elseif i_rat == 5
+    if i_rat == 15
         start_session = 1;
     else
         start_session = 1;
@@ -103,7 +101,7 @@ for i_rat = 5 : num_rats
             'wavelet','amor',...
             'frequencylimits', [1, 100]);
 
-        if i_rat == 4 && i_session == 15
+        if i_rat == 15 && i_session == 1
             start_event = 1;
         else
             start_event = 1;

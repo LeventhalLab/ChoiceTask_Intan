@@ -45,7 +45,7 @@ unit_table_updated = clean_units_table(unit_table);
 
 num_rats = length(ratIDs);
 
-for i_rat = 1 : num_rats
+for i_rat = 9 : num_rats
     ratID = ratIDs{i_rat};
     rat_folder = fullfile(choicetask_path, ratID);
 
@@ -85,8 +85,12 @@ for i_rat = 1 : num_rats
             n_rows = sites_per_shank - 1;
     end
     intan2probe_mapping = probe_site_mapping_all_probes(probe_type);
-
-    for i_session = 1 : num_sessions
+    if i_rat == 9
+        start_session = 3;
+    else
+        start_session = 1;
+    end
+    for i_session = start_session : num_sessions
 
         session_name = session_dirs(i_session).name;
 
